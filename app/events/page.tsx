@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Calendar, MapPin, Clock, Users, ArrowRight, Loader2, X, CheckCircle } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, ArrowRight, Loader2, X, CheckCircle, Share2, Facebook, Twitter, Instagram, Copy } from 'lucide-react';
 import Footer from '@/components/layout/Footer';
 import Card from '@/components/ui/Card';
 import Link from 'next/link';
@@ -11,9 +12,11 @@ import { api, ApiError } from '@/lib/api';
 import { showToast } from '@/lib/toast';
 
 export default function EventsPage() {
+  const router = useRouter();
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [pastEvents, setPastEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [registrationModalOpen, setRegistrationModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [registrationForm, setRegistrationForm] = useState({
@@ -26,8 +29,51 @@ export default function EventsPage() {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
   useEffect(() => {
+    // Check login status
+    const checkLogin = () => {
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('userToken');
+        setIsLoggedIn(!!token && token.trim() !== '');
+      }
+    };
+    
+    checkLogin();
     fetchEvents();
+    
+    // Check login status when page gains focus (user returns from login)
+    const handleFocus = () => {
+      checkLogin();
+    };
+    
+    // Listen for storage changes (when user logs in from another tab/window)
+    window.addEventListener('storage', checkLogin);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('storage', checkLogin);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
+
+  // Check for pending event registration after events are loaded
+  useEffect(() => {
+    if (!loading && isLoggedIn && upcomingEvents.length > 0) {
+      const pendingEventId = localStorage.getItem('pendingEventRegistration');
+      if (pendingEventId) {
+        // Find the event in upcoming or past events
+        const allEvents = [...upcomingEvents, ...pastEvents];
+        const event = allEvents.find(e => e.id === pendingEventId);
+        if (event) {
+          setSelectedEvent(event);
+          setRegistrationModalOpen(true);
+          localStorage.removeItem('pendingEventRegistration');
+        } else {
+          // Event not found, clear the pending registration
+          localStorage.removeItem('pendingEventRegistration');
+        }
+      }
+    }
+  }, [loading, isLoggedIn, upcomingEvents, pastEvents]);
 
   const fetchEvents = async () => {
     try {
@@ -39,12 +85,20 @@ export default function EventsPage() {
         const past: any[] = [];
 
         data.forEach((event: any) => {
-          const eventDate = event.startDateTime ? new Date(event.startDateTime) : (event.startDate ? new Date(event.startDate) : null);
+          // Use startDate (which is what backend provides) or startDateTime as fallback
+          const startDate = event.startDate ? new Date(event.startDate) : (event.startDateTime ? new Date(event.startDateTime) : null);
+          const endDate = event.endDate ? new Date(event.endDate) : (event.endDateTime ? new Date(event.endDateTime) : null);
+          
+          // Format date for display
+          const dateStr = event.startDate 
+            ? (typeof event.startDate === 'string' ? event.startDate : new Date(event.startDate).toISOString().split('T')[0])
+            : (event.startDateTime ? new Date(event.startDateTime).toISOString().split('T')[0] : '');
+          
           const formatted = {
             id: event._id || event.id,
             title: event.title || 'Untitled Event',
             image: event.image || 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=800',
-            date: event.startDate || (event.startDateTime ? new Date(event.startDateTime).toISOString().split('T')[0] : ''),
+            date: dateStr,
             time: event.time || (event.startDateTime 
               ? `${new Date(event.startDateTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} - ${event.endDateTime ? new Date(event.endDateTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''}`
               : ''),
@@ -58,7 +112,15 @@ export default function EventsPage() {
             description: event.description || 'Join us for this event',
           };
 
-          if (eventDate && eventDate >= now) {
+          // Check if event is upcoming: 
+          // 1. If status is 'upcoming' or 'ongoing', it's upcoming
+          // 2. If endDate hasn't passed yet, it's upcoming
+          // 3. Otherwise, it's past
+          const isUpcoming = event.status === 'upcoming' || event.status === 'ongoing' || 
+                            (endDate && endDate >= now) || 
+                            (startDate && startDate >= now);
+
+          if (isUpcoming) {
             upcoming.push(formatted);
           } else {
             past.push(formatted);
@@ -100,7 +162,51 @@ export default function EventsPage() {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
   };
 
-  const handleRegisterClick = (event: any) => {
+  const formatTime = (time: string) => {
+    if (!time) return '';
+    // Convert 24-hour format (HH:MM) to 12-hour format (HH:MM AM/PM)
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  const handleShare = (event: any, platform: string) => {
+    const eventUrl = typeof window !== 'undefined' ? `${window.location.origin}/events/${event.id}` : '';
+    const eventDate = new Date(event.date).toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    const shareText = `Join us at ${event.title} organized by Care Foundation Trust®!\n\n📅 Date: ${eventDate}${event.time ? `\n⏰ Time: ${event.time}` : ''}\n📍 Location: ${event.location}\n\n${event.description}\n\nRegister now: ${eventUrl}`;
+    
+    if (platform === 'copy') {
+      navigator.clipboard.writeText(eventUrl);
+      showToast('Event link copied to clipboard!', 'success');
+    } else if (platform === 'facebook') {
+      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}&quote=${encodeURIComponent(shareText)}`;
+      window.open(facebookUrl, '_blank', 'width=600,height=400');
+    } else if (platform === 'twitter') {
+      const twitterText = `Join us at ${event.title} by Care Foundation Trust®! ${eventDate}${event.time ? ` at ${event.time}` : ''} - ${event.location}`;
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterText)}&url=${encodeURIComponent(eventUrl)}`;
+      window.open(twitterUrl, '_blank', 'width=600,height=400');
+    } else if (platform === 'instagram') {
+      // Instagram doesn't support direct sharing via URL, so copy text
+      navigator.clipboard.writeText(shareText);
+      showToast('Event details copied! Paste on Instagram', 'info');
+    } else if (platform === 'whatsapp') {
+      const whatsappText = `Join us at ${event.title} by Care Foundation Trust®!\n\n📅 ${eventDate}${event.time ? `\n⏰ ${event.time}` : ''}\n📍 ${event.location}\n\n${eventUrl}`;
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
+      window.open(whatsappUrl, '_blank');
+    }
+  };
+
+  const handleRegisterClick = (event: any, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
     setSelectedEvent(event);
     setRegistrationModalOpen(true);
     setRegistrationSuccess(false);
@@ -146,12 +252,12 @@ export default function EventsPage() {
       // Refresh events to update attendee count
       await fetchEvents();
       
-      // Close modal after 2 seconds
+      // Keep success page open for 5 seconds before closing
       setTimeout(() => {
         setRegistrationModalOpen(false);
         setRegistrationSuccess(false);
         setSelectedEvent(null);
-      }, 2000);
+      }, 5000);
     } catch (error) {
       if (error instanceof ApiError) {
         showToast(error.message || 'Registration failed. Please try again.', 'error');
@@ -189,7 +295,7 @@ export default function EventsPage() {
           {upcomingEvents.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {upcomingEvents.map((event) => (
-              <Card key={event.id} hover className="overflow-hidden">
+              <Card key={event.id} hover className="overflow-hidden cursor-pointer" onClick={() => router.push(`/events/${event.id}`)}>
                 <div className="relative h-48">
                   <Image
                     src={event.image}
@@ -205,7 +311,7 @@ export default function EventsPage() {
                   </div>
                 </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{event.title}</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 hover:text-[#10b981] transition-colors">{event.title}</h3>
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2">{event.description}</p>
                   
                   <div className="space-y-2 mb-4">
@@ -220,7 +326,19 @@ export default function EventsPage() {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Clock className="h-4 w-4 text-[#10b981]" />
-                      {event.time}
+                      <div className="flex flex-col gap-0.5">
+                        {event.time && (
+                          <span className="font-medium">
+                            Start: <span className="text-[#10b981] font-semibold">{formatTime(event.time)}</span>
+                          </span>
+                        )}
+                        {event.endTime && (
+                          <span className="font-medium">
+                            End: <span className="text-[#10b981] font-semibold">{formatTime(event.endTime)}</span>
+                          </span>
+                        )}
+                        {!event.time && !event.endTime && <span>N/A</span>}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <MapPin className="h-4 w-4 text-[#10b981]" />
@@ -240,31 +358,69 @@ export default function EventsPage() {
                   </div>
 
                   <div className="pt-4 border-t border-gray-200">
-                    <p className="text-xs text-gray-500 mb-2">{event.address}</p>
-                    {(event.latitude && event.longitude) || event.address ? (
-                      <div className="mb-3 w-full h-48 border border-gray-200 rounded-lg overflow-hidden">
-                        <iframe
-                          width="100%"
-                          height="100%"
-                          frameBorder="0"
-                          style={{ border: 0 }}
-                          src={
-                            event.latitude && event.longitude
-                              ? `https://www.google.com/maps?q=${event.latitude},${event.longitude}&output=embed`
-                              : `https://www.google.com/maps?q=${encodeURIComponent(event.address || event.location)}&output=embed`
-                          }
-                          allowFullScreen
-                        />
-                      </div>
-                    ) : null}
+                    {event.address && (
+                      <p className="text-xs text-gray-500 mb-3">{event.address}</p>
+                    )}
                     <Button 
                       variant="outline" 
-                      className="w-full"
-                      onClick={() => handleRegisterClick(event)}
+                      className="w-full mb-3"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRegisterClick(event);
+                      }}
                     >
                       Register for Event
                       <ArrowRight className="ml-2 h-4 w-4 inline" />
                     </Button>
+                    
+                    <div className="border-t border-gray-200 pt-3">
+                      <p className="text-xs text-gray-600 mb-2 font-medium">Share this event</p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShare(event, 'facebook');
+                          }}
+                          className="flex-1 py-2 px-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
+                          title="Share on Facebook"
+                        >
+                          <Facebook className="h-3.5 w-3.5" />
+                          <span className="text-xs hidden sm:inline">Facebook</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShare(event, 'twitter');
+                          }}
+                          className="flex-1 py-2 px-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors flex items-center justify-center gap-1"
+                          title="Share on Twitter"
+                        >
+                          <Twitter className="h-3.5 w-3.5" />
+                          <span className="text-xs hidden sm:inline">Twitter</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShare(event, 'whatsapp');
+                          }}
+                          className="flex-1 py-2 px-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-1"
+                          title="Share on WhatsApp"
+                        >
+                          <Share2 className="h-3.5 w-3.5" />
+                          <span className="text-xs hidden sm:inline">WhatsApp</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShare(event, 'copy');
+                          }}
+                          className="py-2 px-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                          title="Copy link"
+                        >
+                          <Copy className="h-3.5 w-3.5 text-gray-700" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </Card>
@@ -347,7 +503,30 @@ export default function EventsPage() {
                     <CheckCircle className="h-10 w-10 text-green-600" />
                   </div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">You're registered 🎉</h2>
-                  <p className="text-gray-600">Thank you for registering for {selectedEvent.title}!</p>
+                  <p className="text-gray-600 mb-4">Thank you for registering for {selectedEvent.title}!</p>
+                  <div className="mt-6 p-4 bg-gray-50 rounded-lg text-left">
+                    <h3 className="font-semibold text-gray-900 mb-2">Event Details:</h3>
+                    <p className="text-sm text-gray-600 mb-1">
+                      <Calendar className="h-4 w-4 inline mr-2" />
+                      {new Date(selectedEvent.date).toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </p>
+                    {selectedEvent.time && (
+                      <p className="text-sm text-gray-600 mb-1">
+                        <Clock className="h-4 w-4 inline mr-2" />
+                        {selectedEvent.time}
+                      </p>
+                    )}
+                    <p className="text-sm text-gray-600">
+                      <MapPin className="h-4 w-4 inline mr-2" />
+                      {selectedEvent.location}
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-4">This window will close automatically...</p>
                 </div>
               ) : (
                 <>

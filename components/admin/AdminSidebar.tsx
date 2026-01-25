@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -36,11 +36,14 @@ import { clsx } from 'clsx';
 import { useSidebar } from '@/contexts/SidebarContext';
 import AnimatedHamburger from '@/components/ui/AnimatedHamburger';
 
-// Main Section
-const mainSection = [
-  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/reports', label: 'Reports', icon: BarChart3 },
-];
+// Main Section - Get dashboard URL based on role
+const getMainSection = (userRole: string) => {
+  const dashboardUrl = userRole === 'staff' ? '/staff/dashboard' : '/admin/dashboard';
+  return [
+    { href: dashboardUrl, label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/admin/reports', label: 'Reports', icon: BarChart3 },
+  ];
+};
 
 // Backend Content Section
 const donationSection = [
@@ -81,9 +84,6 @@ const usersSection = [
   { href: '/admin/users', label: 'Registered Users', icon: Users },
 ];
 
-const formSection = [
-  { href: '/admin/form-submissions', label: 'All Form Submissions', icon: ClipboardList },
-];
 
 const querySection = [
   { href: '/admin/queries', label: 'Query Mail', icon: Mail },
@@ -103,8 +103,8 @@ const contentSection = [
   { href: '/admin/celebrities', label: 'Celebrities', icon: Star },
 ];
 
-const frontSideSection = [
-  { href: '/', label: 'Front Side', icon: Home },
+const staffManagementSection = [
+  { href: '/admin/staff-management', label: 'Staff Management', icon: Users },
 ];
 
 const profileSection = [
@@ -112,10 +112,126 @@ const profileSection = [
   { href: '/logout', label: 'Log Out', icon: LogOut },
 ];
 
+// Permission mapping for sections
+const sectionPermissions: Record<string, string> = {
+  'donationSection': 'manage_donations',
+  'couponSection': 'manage_coupons',
+  'crowdfundingSection': 'manage_fundraisers',
+  'volunteerSection': 'manage_volunteers',
+  'partnerSection': 'manage_partners',
+  'usersSection': 'manage_users',
+  'querySection': 'manage_queries',
+  'eventsSection': 'manage_events',
+  'productsSection': 'manage_products',
+  'contentSection': 'manage_blogs', // Blogs permission
+  'staffManagementSection': 'manage_users', // Only admin should see this
+};
+
 export default function AdminSidebar() {
   const pathname = usePathname();
   const { isCollapsed, setIsCollapsed } = useSidebar();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [userPermissions, setUserPermissions] = useState<string[]>([]);
+  const [userRole, setUserRole] = useState<string>('');
+
+  useEffect(() => {
+    // Fetch user data and permissions from API
+    const fetchUserData = async () => {
+      try {
+        const { api } = await import('@/lib/api');
+        const userRes = await api.get<any>('/users/me');
+        if (userRes) {
+          const role = userRes.role || '';
+          const permissions = userRes.permissions || [];
+          
+          setUserRole(role);
+          setUserPermissions(permissions);
+          
+          // Update localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('userRole', role);
+            localStorage.setItem('userPermissions', JSON.stringify(permissions));
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        // Fallback to localStorage
+        if (typeof window !== 'undefined') {
+          const role = localStorage.getItem('userRole') || '';
+          const permissions = localStorage.getItem('userPermissions');
+          setUserRole(role);
+          
+          if (permissions) {
+            try {
+              setUserPermissions(JSON.parse(permissions));
+            } catch (e) {
+              setUserPermissions([]);
+            }
+          } else {
+            setUserPermissions([]);
+          }
+        }
+      }
+    };
+
+    fetchUserData();
+
+    // Listen for permission updates
+    const handleStorageChange = () => {
+      const updatedPermissions = localStorage.getItem('userPermissions');
+      if (updatedPermissions) {
+        try {
+          setUserPermissions(JSON.parse(updatedPermissions));
+        } catch (e) {
+          setUserPermissions([]);
+        }
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorageChange);
+      window.addEventListener('permissionsUpdated', handleStorageChange);
+
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+        window.removeEventListener('permissionsUpdated', handleStorageChange);
+      };
+    }
+  }, []);
+
+  // Check if user has permission for a section
+  const hasPermission = (sectionKey: string): boolean => {
+    // Admin has all permissions
+    if (userRole === 'admin') return true;
+    
+    // Staff needs specific permission
+    if (userRole === 'staff') {
+      const requiredPermission = sectionPermissions[sectionKey];
+      return requiredPermission ? userPermissions.includes(requiredPermission) : false;
+    }
+    
+    return false;
+  };
+
+  // Filter sections based on permissions
+  const getFilteredSection = (section: any[], sectionKey: string) => {
+    if (hasPermission(sectionKey)) {
+      return section;
+    }
+    return [];
+  };
+
+  // Get active and hover classes based on user role
+  const getHoverClasses = (isActive: boolean) => {
+    if (isActive) {
+      // Staff gets unique active color (indigo-purple gradient), admin keeps green
+      if (userRole === 'staff') {
+        return 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/50';
+      }
+      return 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/50';
+    }
+    return 'text-gray-300 hover:text-white hover:bg-gray-800 active:bg-gray-700';
+  };
   
   return (
     <>
@@ -142,7 +258,7 @@ export default function AdminSidebar() {
           <div className="p-6 border-b border-gray-800">
             <div className="flex items-center justify-between">
               {!isCollapsed && (
-                <h1 className="text-xl font-bold text-white transition-opacity duration-300">Admin Panel</h1>
+                <h1 className="text-2xl font-bold text-white transition-opacity duration-300">{userRole === 'staff' ? 'Staff Panel' : 'Admin Panel'}</h1>
               )}
               <div className="lg:block hidden">
                 <AnimatedHamburger
@@ -161,18 +277,22 @@ export default function AdminSidebar() {
             <div>
               {!isCollapsed && <p className="text-xs font-semibold text-gray-500 uppercase mb-2 px-4">Main</p>}
               <div className="space-y-1">
-                {mainSection.map((item) => {
-                  const isActive = pathname === item.href;
+                {getMainSection(userRole).map((item) => {
+                  // Check permission for Reports
+                  if (item.href === '/admin/reports' && userRole === 'staff' && !userPermissions.includes('view_reports')) {
+                    return null;
+                  }
+                  // Check if dashboard URL matches (for staff/admin)
+                  const isActive = pathname === item.href || 
+                    (item.href.includes('/dashboard') && (pathname === '/admin/dashboard' || pathname === '/staff/dashboard'));
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       onClick={() => setIsMobileOpen(false)}
                       className={clsx(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200',
-                        isActive
-                          ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/50'
-                          : 'text-gray-300 hover:text-white hover:bg-gray-800 active:bg-gray-700'
+                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
+                        getHoverClasses(isActive)
                       )}
                     >
                       <item.icon
@@ -197,6 +317,7 @@ export default function AdminSidebar() {
             {!isCollapsed && <p className="text-xs font-semibold text-gray-500 uppercase mb-2 px-4 mt-4">Backend Content</p>}
             
             {/* Donation Section */}
+            {hasPermission('donationSection') && (
             <div>
               {!isCollapsed && <p className="text-xs text-gray-400 mb-1 px-4">Donation</p>}
               <div className="space-y-1">
@@ -208,10 +329,8 @@ export default function AdminSidebar() {
                       href={item.href}
                       onClick={() => setIsMobileOpen(false)}
                       className={clsx(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200',
-                        isActive
-                          ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/50'
-                          : 'text-gray-300 hover:text-white hover:bg-gray-800 active:bg-gray-700'
+                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
+                        getHoverClasses(isActive)
                       )}
                     >
                       <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -221,8 +340,10 @@ export default function AdminSidebar() {
                 })}
               </div>
             </div>
+            )}
 
             {/* Coupon Section */}
+            {hasPermission('couponSection') && (
             <div>
               {!isCollapsed && <p className="text-xs text-gray-400 mb-1 px-4">Coupon</p>}
               <div className="space-y-1">
@@ -234,10 +355,8 @@ export default function AdminSidebar() {
                       href={item.href}
                       onClick={() => setIsMobileOpen(false)}
                       className={clsx(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200',
-                        isActive
-                          ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/50'
-                          : 'text-gray-300 hover:text-white hover:bg-gray-800 active:bg-gray-700'
+                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
+                        getHoverClasses(isActive)
                       )}
                     >
                       <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -247,8 +366,10 @@ export default function AdminSidebar() {
                 })}
               </div>
             </div>
+            )}
 
             {/* Crowdfunding Section */}
+            {hasPermission('crowdfundingSection') && (
             <div>
               {!isCollapsed && <p className="text-xs text-gray-400 mb-1 px-4">Crowdfunding</p>}
               <div className="space-y-1">
@@ -260,10 +381,8 @@ export default function AdminSidebar() {
                       href={item.href}
                       onClick={() => setIsMobileOpen(false)}
                       className={clsx(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200',
-                        isActive
-                          ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/50'
-                          : 'text-gray-300 hover:text-white hover:bg-gray-800 active:bg-gray-700'
+                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
+                        getHoverClasses(isActive)
                       )}
                     >
                       <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -273,8 +392,10 @@ export default function AdminSidebar() {
                 })}
               </div>
             </div>
+            )}
 
             {/* Volunteer Section */}
+            {hasPermission('volunteerSection') && (
             <div>
               {!isCollapsed && <p className="text-xs text-gray-400 mb-1 px-4">Volunteer</p>}
               <div className="space-y-1">
@@ -286,10 +407,8 @@ export default function AdminSidebar() {
                       href={item.href}
                       onClick={() => setIsMobileOpen(false)}
                       className={clsx(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200',
-                        isActive
-                          ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/50'
-                          : 'text-gray-300 hover:text-white hover:bg-gray-800 active:bg-gray-700'
+                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
+                        getHoverClasses(isActive)
                       )}
                     >
                       <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -299,8 +418,10 @@ export default function AdminSidebar() {
                 })}
               </div>
             </div>
+            )}
 
             {/* Partner Section */}
+            {hasPermission('partnerSection') && (
             <div>
               {!isCollapsed && <p className="text-xs text-gray-400 mb-1 px-4">Partner</p>}
               <div className="space-y-1">
@@ -312,10 +433,8 @@ export default function AdminSidebar() {
                       href={item.href}
                       onClick={() => setIsMobileOpen(false)}
                       className={clsx(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200',
-                        isActive
-                          ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/50'
-                          : 'text-gray-300 hover:text-white hover:bg-gray-800 active:bg-gray-700'
+                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
+                        getHoverClasses(isActive)
                       )}
                     >
                       <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -325,8 +444,10 @@ export default function AdminSidebar() {
                 })}
               </div>
             </div>
+            )}
 
             {/* Users Section */}
+            {hasPermission('usersSection') && (
             <div>
               {!isCollapsed && <p className="text-xs text-gray-400 mb-1 px-4">Users</p>}
               <div className="space-y-1">
@@ -338,10 +459,8 @@ export default function AdminSidebar() {
                       href={item.href}
                       onClick={() => setIsMobileOpen(false)}
                       className={clsx(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200',
-                        isActive
-                          ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/50'
-                          : 'text-gray-300 hover:text-white hover:bg-gray-800 active:bg-gray-700'
+                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
+                        getHoverClasses(isActive)
                       )}
                     >
                       <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -351,34 +470,10 @@ export default function AdminSidebar() {
                 })}
               </div>
             </div>
-
-            {/* Form Submissions */}
-            <div>
-              {!isCollapsed && <p className="text-xs text-gray-400 mb-1 px-4">Form Submissions</p>}
-              <div className="space-y-1">
-                {formSection.map((item) => {
-                  const isActive = pathname === item.href || (pathname?.startsWith(item.href + '/') && pathname.split('/').length === item.href.split('/').length + 1);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setIsMobileOpen(false)}
-                      className={clsx(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200',
-                        isActive
-                          ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/50'
-                          : 'text-gray-300 hover:text-white hover:bg-gray-800 active:bg-gray-700'
-                      )}
-                    >
-                      <item.icon className="h-5 w-5 flex-shrink-0" />
-                      {!isCollapsed && <span className="font-medium">{item.label}</span>}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
+            )}
 
             {/* Website Queries */}
+            {hasPermission('querySection') && (
             <div>
               {!isCollapsed && <p className="text-xs text-gray-400 mb-1 px-4">Website Queries</p>}
               <div className="space-y-1">
@@ -390,10 +485,8 @@ export default function AdminSidebar() {
                       href={item.href}
                       onClick={() => setIsMobileOpen(false)}
                       className={clsx(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200',
-                        isActive
-                          ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/50'
-                          : 'text-gray-300 hover:text-white hover:bg-gray-800 active:bg-gray-700'
+                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
+                        getHoverClasses(isActive)
                       )}
                     >
                       <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -403,8 +496,10 @@ export default function AdminSidebar() {
                 })}
               </div>
             </div>
+            )}
 
             {/* Events Section */}
+            {hasPermission('eventsSection') && (
             <div>
               {!isCollapsed && <p className="text-xs text-gray-400 mb-1 px-4">Events</p>}
               <div className="space-y-1">
@@ -416,10 +511,8 @@ export default function AdminSidebar() {
                       href={item.href}
                       onClick={() => setIsMobileOpen(false)}
                       className={clsx(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200',
-                        isActive
-                          ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/50'
-                          : 'text-gray-300 hover:text-white hover:bg-gray-800 active:bg-gray-700'
+                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
+                        getHoverClasses(isActive)
                       )}
                     >
                       <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -429,8 +522,10 @@ export default function AdminSidebar() {
                 })}
               </div>
             </div>
+            )}
 
             {/* Products */}
+            {hasPermission('productsSection') && (
             <div>
               {!isCollapsed && <p className="text-xs text-gray-400 mb-1 px-4">Products</p>}
               <div className="space-y-1">
@@ -442,10 +537,8 @@ export default function AdminSidebar() {
                       href={item.href}
                       onClick={() => setIsMobileOpen(false)}
                       className={clsx(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200',
-                        isActive
-                          ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/50'
-                          : 'text-gray-300 hover:text-white hover:bg-gray-800 active:bg-gray-700'
+                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
+                        getHoverClasses(isActive)
                       )}
                     >
                       <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -455,12 +548,20 @@ export default function AdminSidebar() {
                 })}
               </div>
             </div>
+            )}
 
             {/* Content Management */}
+            {(hasPermission('contentSection') || userPermissions.includes('manage_celebrities') || userPermissions.includes('manage_blogs')) && (
             <div>
               {!isCollapsed && <p className="text-xs text-gray-400 mb-1 px-4">Content Management</p>}
               <div className="space-y-1">
                 {contentSection.map((item) => {
+                  // Check specific permission for each item
+                  const hasItemPermission = userRole === 'admin' || 
+                    (item.href.includes('/blogs') && (userRole === 'admin' || userPermissions.includes('manage_blogs'))) ||
+                    (item.href.includes('/celebrities') && (userRole === 'admin' || userPermissions.includes('manage_celebrities')));
+                  
+                  if (!hasItemPermission) return null;
                   const isActive = pathname === item.href || (pathname?.startsWith(item.href + '/') && pathname.split('/').length === item.href.split('/').length + 1);
                   return (
                     <Link
@@ -468,10 +569,8 @@ export default function AdminSidebar() {
                       href={item.href}
                       onClick={() => setIsMobileOpen(false)}
                       className={clsx(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200',
-                        isActive
-                          ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/50'
-                          : 'text-gray-300 hover:text-white hover:bg-gray-800 active:bg-gray-700'
+                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
+                        getHoverClasses(isActive)
                       )}
                     >
                       <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -481,12 +580,14 @@ export default function AdminSidebar() {
                 })}
               </div>
             </div>
+            )}
 
-            {/* Front Side */}
+            {/* Staff Management - Only for Admin */}
+            {userRole === 'admin' && (
             <div>
-              {!isCollapsed && <p className="text-xs text-gray-400 mb-1 px-4">Front Side</p>}
+              {!isCollapsed && <p className="text-xs text-gray-400 mb-1 px-4">Staff Management</p>}
               <div className="space-y-1">
-                {frontSideSection.map((item) => {
+                {staffManagementSection.map((item) => {
                   const isActive = pathname === item.href;
                   return (
                     <Link
@@ -494,10 +595,8 @@ export default function AdminSidebar() {
                       href={item.href}
                       onClick={() => setIsMobileOpen(false)}
                       className={clsx(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200',
-                        isActive
-                          ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/50'
-                          : 'text-gray-300 hover:text-white hover:bg-gray-800 active:bg-gray-700'
+                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
+                        getHoverClasses(isActive)
                       )}
                     >
                       <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -507,6 +606,7 @@ export default function AdminSidebar() {
                 })}
               </div>
             </div>
+            )}
           </nav>
           
           {/* Profile Section */}
@@ -543,9 +643,7 @@ export default function AdminSidebar() {
                   onClick={() => setIsMobileOpen(false)}
                   className={clsx(
                     'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group',
-                    isActive
-                      ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/50'
-                      : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                    getHoverClasses(isActive)
                   )}
                 >
                   <item.icon className="h-5 w-5 flex-shrink-0" />

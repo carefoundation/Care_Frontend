@@ -29,7 +29,12 @@ export default function AdminAuthGuard({ children }: { children: React.ReactNode
       setIsLoading(false);
     } else {
       // For other admin routes, require authentication
-      if (checkAdminSession()) {
+      // Check if user is admin or staff
+      const userRole = localStorage.getItem('userRole');
+      const userToken = localStorage.getItem('userToken');
+      const adminToken = localStorage.getItem('adminToken');
+      
+      if (checkAdminSession() || (userRole === 'staff' && userToken) || (userRole === 'admin' && userToken)) {
         setIsAuthenticated(true);
       } else {
         router.push('/login');

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -24,8 +25,8 @@ import { clsx } from 'clsx';
 import { useSidebar } from '@/contexts/SidebarContext';
 import AnimatedHamburger from '@/components/ui/AnimatedHamburger';
 
-const menuItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+const getMenuItems = (dashboardUrl: string) => [
+  { href: dashboardUrl, label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/my-donations', label: 'My Donations', icon: Heart },
   { href: '/dashboard/my-campaigns', label: 'My Campaigns', icon: Target },
   { href: '/dashboard/coupons', label: 'My Coupons', icon: Ticket },
@@ -66,6 +67,19 @@ export default function ClientSidebar() {
   };
   
   const userRole = getUserRole();
+  
+  // Get dashboard URL based on role
+  const getDashboardUrl = () => {
+    if (typeof window !== 'undefined') {
+      const role = localStorage.getItem('userRole');
+      if (role === 'admin') return '/admin/dashboard';
+      if (role === 'staff') return '/staff/dashboard';
+      return '/donor/dashboard';
+    }
+    return '/donor/dashboard';
+  };
+  
+  const dashboardUrl = getDashboardUrl();
 
   return (
     <>
@@ -92,16 +106,27 @@ export default function ClientSidebar() {
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               {!isCollapsed && (
-                <Link href="/dashboard" className="flex items-center gap-2 transition-opacity duration-300">
-                  <div className="bg-[#10b981] p-2 rounded-lg">
-                    <Heart className="h-5 w-5 text-white fill-white" />
+                <Link href={dashboardUrl} className="flex items-center transition-opacity duration-300">
+                  <div className="relative w-14 h-14 flex-shrink-0">
+                    <Image
+                      src="/Logo.png"
+                      alt="Care Foundation Trust Logo"
+                      fill
+                      className="object-contain"
+                      priority
+                    />
                   </div>
-                  <span className="text-xl font-bold text-gray-900">Care</span>
                 </Link>
               )}
               {isCollapsed && (
-                <div className="bg-[#10b981] p-2 rounded-lg mx-auto transition-all duration-300">
-                  <Heart className="h-5 w-5 text-white fill-white" />
+                <div className="relative w-12 h-12 mx-auto transition-all duration-300">
+                  <Image
+                    src="/Logo.png"
+                    alt="Care Foundation Trust Logo"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
                 </div>
               )}
               <div className="lg:block hidden">
@@ -118,10 +143,10 @@ export default function ClientSidebar() {
           <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
             {/* Main Menu */}
             <div className="space-y-1">
-              {menuItems.map((item) => {
+              {getMenuItems(dashboardUrl).map((item) => {
                 let isActive = false;
-                if (item.href === '/dashboard') {
-                  isActive = pathname === '/dashboard';
+                if (item.href === dashboardUrl || item.href.includes('/dashboard')) {
+                  isActive = pathname === item.href || pathname?.startsWith(item.href);
                 } else {
                   isActive = pathname === item.href || (pathname?.startsWith(item.href + '/') && pathname.split('/').length === item.href.split('/').length + 1);
                 }

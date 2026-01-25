@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Heart, TrendingUp, Users, Target, Plus, Eye, Edit, Trash2, ArrowRight, Wallet, Award, Download, Ticket, Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
@@ -11,7 +12,8 @@ import { api, ApiError } from '@/lib/api';
 
 const PartnerKycModal = dynamic(() => import('@/components/PartnerKycModal'), { ssr: false });
 
-export default function DashboardPage() {
+export default function DonorDashboardPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'overview' | 'donations' | 'campaigns'>('overview');
   const [userRole, setUserRole] = useState<'donor' | 'beneficiary' | 'volunteer' | 'vendor' | 'fundraiser' | 'partner' | 'staff'>('donor');
   const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
@@ -28,25 +30,20 @@ export default function DashboardPage() {
   const [couponStats, setCouponStats] = useState({ total: 0, redeemed: 0, active: 0 });
   
   useEffect(() => {
-    // Redirect to role-based dashboard
+    // Redirect admin/staff to their dashboards
     if (typeof window !== 'undefined') {
       const role = localStorage.getItem('userRole');
       if (role === 'admin') {
-        window.location.href = '/admin/dashboard';
+        router.push('/admin/dashboard');
         return;
       }
       if (role === 'staff') {
-        window.location.href = '/staff/dashboard';
-        return;
-      }
-      // For other roles, redirect to donor dashboard
-      if (role && role !== 'donor' && role !== 'beneficiary' && role !== 'volunteer' && role !== 'vendor' && role !== 'fundraiser' && role !== 'partner') {
-        window.location.href = '/donor/dashboard';
+        router.push('/staff/dashboard');
         return;
       }
     }
     fetchDashboardData();
-  }, []);
+  }, [router]);
 
   const fetchDashboardData = async () => {
     try {
@@ -351,7 +348,6 @@ export default function DashboardPage() {
           {userRole === 'volunteer' && 'View your volunteer activities'}
           {userRole === 'fundraiser' && 'Manage your fundraising campaigns'}
           {userRole === 'donor' && "Here's your impact summary"}
-          {userRole === 'staff' && 'Manage organization activities'}
         </p>
       </div>
         
@@ -486,7 +482,7 @@ export default function DashboardPage() {
                 Donate Now
               </Button>
             </Link>
-            <Link href="/dashboard/my-donations">
+            <Link href="/donor/dashboard?tab=donations">
               <Button variant="outline" className="w-full">
                 <Eye className="h-4 w-4 mr-2" />
                 View All Donations
@@ -557,7 +553,7 @@ export default function DashboardPage() {
             <Card className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-gray-900">Recent Donations</h2>
-                <Link href="/dashboard?tab=donations">
+                <Link href="/donor/dashboard?tab=donations">
                   <Button variant="ghost" size="sm">
                     View All
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -584,7 +580,7 @@ export default function DashboardPage() {
             <Card className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-gray-900">My Campaigns</h2>
-                <Link href="/dashboard?tab=campaigns">
+                <Link href="/donor/dashboard?tab=campaigns">
                   <Button variant="ghost" size="sm">
                     View All
                     <ArrowRight className="ml-2 h-4 w-4" />

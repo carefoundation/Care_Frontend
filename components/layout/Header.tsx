@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { Heart, Menu, X, User, LogIn, LogOut, ChevronDown, Info, Target, Users, Award, FileText, TrendingUp, PlusCircle, FolderOpen, UtensilsCrossed, Stethoscope, Handshake, UserPlus, Calendar, LayoutDashboard } from 'lucide-react';
+import { Heart, Menu, X, User, LogIn, LogOut, ChevronDown, Info, Target, Users, Award, FileText, TrendingUp, PlusCircle, FolderOpen, UtensilsCrossed, Stethoscope, Handshake, UserPlus, Calendar, LayoutDashboard, Star, BookOpen } from 'lucide-react';
 import AnimatedHamburger from '../ui/AnimatedHamburger';
 import Button from '../ui/Button';
 import { checkAdminSession, clearAdminSession } from '@/lib/auth';
@@ -149,7 +150,8 @@ export default function Header() {
 
   const moreDropdownItems = [
     { href: '/events', label: 'Events', icon: Calendar },
-    { href: '/transparency', label: 'Transparency', icon: FileText },
+    { href: '/celebrities', label: 'Celebrities', icon: Star },
+    { href: '/blogs', label: 'Blogs', icon: BookOpen },
     { href: '/founder', label: 'Founder', icon: User },
   ];
 
@@ -167,16 +169,18 @@ export default function Header() {
       }`}
       suppressHydrationWarning
     >
-      <nav className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <nav className="w-full px-4 sm:px-6 lg:px-8 py-2">
+        <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group" onClick={closeMenu}>
-            <div className="bg-[#10b981] p-2.5 rounded-lg group-hover:bg-[#059669] transition-colors">
-              <Heart className="h-6 w-6 text-white fill-white" />
-            </div>
-            <div className="hidden sm:block">
-              <div className="text-gray-900 font-bold text-lg leading-tight">Care Foundation</div>
-              <div className="text-gray-600 text-xs">Trust Since 1997</div>
+          <Link href="/" className="flex items-center group" onClick={closeMenu}>
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
+              <Image
+                src="/Logo.png"
+                alt="Care Foundation Trust Logo"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
           </Link>
 

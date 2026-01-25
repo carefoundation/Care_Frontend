@@ -5,6 +5,7 @@ import DataTable from '@/components/admin/DataTable';
 import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import EditModal from '@/components/admin/EditModal';
+import ViewModal from '@/components/admin/ViewModal';
 import { Eye, UserCheck, Award, Loader2, Trash2 } from 'lucide-react';
 import { api, ApiError } from '@/lib/api';
 import { showToast } from '@/lib/toast';
@@ -28,6 +29,7 @@ export default function VolunteersPage() {
   const [loading, setLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [issueModalOpen, setIssueModalOpen] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedVolunteer, setSelectedVolunteer] = useState<Volunteer | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
 
@@ -66,6 +68,11 @@ export default function VolunteersPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleView = (volunteer: Volunteer) => {
+    setSelectedVolunteer(volunteer);
+    setViewModalOpen(true);
   };
 
   const handleDeleteClick = (volunteer: Volunteer) => {
@@ -173,8 +180,14 @@ export default function VolunteersPage() {
         columns={columns}
         data={volunteers}
         actions={(row) => (
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm">
+          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => handleView(row)}
+              title="View Details"
+              disabled={updating === (row._id || row.id)}
+            >
               <Eye className="h-4 w-4" />
             </Button>
             <Button 
@@ -232,6 +245,28 @@ export default function VolunteersPage() {
         ]}
         onSave={handleIssueConfirm}
       />
+
+      {/* View Modal */}
+      {selectedVolunteer && (
+        <ViewModal
+          isOpen={viewModalOpen}
+          onClose={() => {
+            setViewModalOpen(false);
+            setSelectedVolunteer(null);
+          }}
+          title="Volunteer Details"
+          data={{
+            'Name': selectedVolunteer.name,
+            'Email': selectedVolunteer.email,
+            'Phone': selectedVolunteer.phone,
+            'City': selectedVolunteer.city || 'N/A',
+            'Hours Volunteered': `${selectedVolunteer.hoursVolunteered || 0} hrs`,
+            'Events Attended': selectedVolunteer.eventsAttended || 0,
+            'Join Date': selectedVolunteer.joinDate || 'N/A',
+            'Status': selectedVolunteer.status || 'N/A',
+          }}
+        />
+      )}
     </div>
   );
 }

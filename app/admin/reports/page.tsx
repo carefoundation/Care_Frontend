@@ -1,10 +1,39 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { Download, FileText, TrendingUp, DollarSign, BarChart3 } from 'lucide-react';
 
 export default function ReportsPage() {
+  const router = useRouter();
+  const [userRole, setUserRole] = useState<string>('');
+  const [userPermissions, setUserPermissions] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const role = localStorage.getItem('userRole') || '';
+      const permissions = localStorage.getItem('userPermissions');
+      setUserRole(role);
+      
+      if (permissions) {
+        try {
+          setUserPermissions(JSON.parse(permissions));
+        } catch (e) {
+          setUserPermissions([]);
+        }
+      } else {
+        setUserPermissions([]);
+      }
+
+      // Check if staff has view_reports permission
+      if (role === 'staff' && !JSON.parse(permissions || '[]').includes('view_reports')) {
+        router.push('/admin');
+        return;
+      }
+    }
+  }, [router]);
   const reportTypes = [
     {
       title: 'Financial Reports',

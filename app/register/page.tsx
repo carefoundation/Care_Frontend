@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Heart, Mail, Lock, Eye, EyeOff, User, Phone, FileText, Upload, X, CheckCircle, Shield, Award, TrendingUp, Users, Target } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { showToast } from '@/lib/toast';
+import { ApiError } from '@/lib/api';
 
 type Role = 'partner' | 'volunteer' | 'fundraiser' | 'donor' | 'staff';
 
@@ -144,23 +146,49 @@ export default function RegisterPage() {
       router.push('/login?registered=true');
     } catch (error: any) {
       let errorMessage = 'Registration failed. Please try again.';
+      let showToastError = false;
       
-      if (error instanceof Error) {
+      // Handle ApiError specifically
+      if (error instanceof ApiError) {
         const errorMsg = error.message.toLowerCase();
         
-        if (errorMsg.includes('already exists') || errorMsg.includes('email')) {
+        if (errorMsg.includes('already exists') || errorMsg.includes('email') || errorMsg.includes('user already exists')) {
           errorMessage = 'An account with this email already exists. Please login instead or use a different email.';
+          showToastError = true;
+          showToast(errorMessage, 'error');
+        } else if (errorMsg.includes('phone') || errorMsg.includes('mobile')) {
+          errorMessage = 'This phone number is already registered. Please use a different number.';
+          showToastError = true;
+          showToast(errorMessage, 'error');
+        } else {
+          errorMessage = error.message || errorMessage;
+          showToastError = true;
+          showToast(errorMessage, 'error');
+        }
+      } else if (error instanceof Error) {
+        const errorMsg = error.message.toLowerCase();
+        
+        if (errorMsg.includes('already exists') || errorMsg.includes('email') || errorMsg.includes('user already exists')) {
+          errorMessage = 'An account with this email already exists. Please login instead or use a different email.';
+          showToastError = true;
+          showToast(errorMessage, 'error');
         } else if (errorMsg.includes('password')) {
           errorMessage = error.message;
         } else if (errorMsg.includes('phone') || errorMsg.includes('mobile')) {
           errorMessage = 'This phone number is already registered. Please use a different number.';
+          showToastError = true;
+          showToast(errorMessage, 'error');
         } else {
           errorMessage = error.message || errorMessage;
         }
       }
       
-      setError(errorMessage);
-      console.error('Registration error:', error);
+      // Only set error state if not showing toast (for validation errors)
+      if (!showToastError) {
+        setError(errorMessage);
+      } else {
+        setError(''); // Clear error state when showing toast
+      }
     } finally {
       setIsLoading(false);
     }

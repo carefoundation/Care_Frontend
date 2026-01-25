@@ -35,21 +35,48 @@ export default function BlogsPage() {
   const fetchBlogs = async () => {
     try {
       setLoading(true);
-      const response = await api.get<Blog[]>('/blogs');
+      const response = await api.get<any>('/blogs');
+      
+      // Handle both array and object with data property
+      let blogsData: any[] = [];
       if (Array.isArray(response)) {
-        const formatted = response.map((blog: any) => ({
+        blogsData = response;
+      } else if (response && response.data && Array.isArray(response.data)) {
+        blogsData = response.data;
+      }
+      
+      const formatted = blogsData.map((blog: any) => {
+        // Handle author - could be object, string, or undefined
+        let authorName = 'Admin';
+        if (blog.author) {
+          if (typeof blog.author === 'string') {
+            authorName = blog.author;
+          } else if (blog.author.name) {
+            authorName = blog.author.name;
+          } else if (blog.author.email) {
+            authorName = blog.author.email;
+          }
+        } else if (blog.createdBy) {
+          if (typeof blog.createdBy === 'string') {
+            authorName = blog.createdBy;
+          } else if (blog.createdBy.name) {
+            authorName = blog.createdBy.name;
+          } else if (blog.createdBy.email) {
+            authorName = blog.createdBy.email;
+          }
+        }
+        
+        return {
           id: blog._id || blog.id,
           _id: blog._id,
           title: blog.title || 'Untitled',
-          author: blog.createdBy?.name || blog.author || 'Admin',
+          author: authorName,
           category: blog.category || 'General',
           publishedDate: blog.createdAt ? new Date(blog.createdAt).toLocaleDateString() : 'N/A',
           status: blog.status || 'draft',
-        }));
-        setBlogs(formatted);
-      } else {
-        setBlogs([]);
-      }
+        };
+      });
+      setBlogs(formatted);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         window.location.href = '/login';

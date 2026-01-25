@@ -34,8 +34,11 @@ export default function CreateEventPage() {
     category: '',
     expectedAttendees: '0',
     time: '',
+    endTime: '',
     image: null as File | null,
   });
+  const [startTime, setStartTime] = useState({ hour: '12', minute: '00', ampm: 'AM' });
+  const [endTime, setEndTime] = useState({ hour: '12', minute: '00', ampm: 'PM' });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showCropModal, setShowCropModal] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
@@ -43,6 +46,38 @@ export default function CreateEventPage() {
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
   const [croppedPreview, setCroppedPreview] = useState<string | null>(null);
+
+  // Convert 12-hour format to 24-hour format
+  const convertTo24Hour = (hour: string, minute: string, ampm: string): string => {
+    let h = parseInt(hour, 10);
+    if (ampm === 'PM' && h !== 12) {
+      h += 12;
+    } else if (ampm === 'AM' && h === 12) {
+      h = 0;
+    }
+    return `${h.toString().padStart(2, '0')}:${minute.padStart(2, '0')}`;
+  };
+
+  // Convert 24-hour format to 12-hour format
+  const convertTo12Hour = (time24: string) => {
+    if (!time24) return { hour: '12', minute: '00', ampm: 'AM' };
+    const [hours, minutes] = time24.split(':');
+    const h = parseInt(hours, 10);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 || 12;
+    return { hour: hour12.toString(), minute: minutes || '00', ampm };
+  };
+
+  // Update formData when time changes
+  useEffect(() => {
+    const time24 = convertTo24Hour(startTime.hour, startTime.minute, startTime.ampm);
+    setFormData(prev => ({ ...prev, time: time24 }));
+  }, [startTime]);
+
+  useEffect(() => {
+    const time24 = convertTo24Hour(endTime.hour, endTime.minute, endTime.ampm);
+    setFormData(prev => ({ ...prev, endTime: time24 }));
+  }, [endTime]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -314,6 +349,7 @@ export default function CreateEventPage() {
         category: formData.category || 'Community',
         expectedAttendees: formData.expectedAttendees ? parseInt(formData.expectedAttendees) : 0,
         time: formData.time || null,
+        endTime: formData.endTime || null,
         image: imageBase64,
       };
 
@@ -333,6 +369,7 @@ export default function CreateEventPage() {
           category: '',
           expectedAttendees: '0',
           time: '',
+          endTime: '',
           image: null,
         });
         setImagePreview(null);
@@ -340,6 +377,8 @@ export default function CreateEventPage() {
         setImageToCrop(null);
         setCrop({ x: 0, y: 0 });
         setZoom(1);
+        setStartTime({ hour: '12', minute: '00', ampm: 'AM' });
+        setEndTime({ hour: '12', minute: '00', ampm: 'PM' });
       } else {
         showToast('Admin will contact you within 24 hours.', 'success');
         // Redirect to dashboard after 2 seconds
@@ -451,14 +490,95 @@ export default function CreateEventPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Time
+                Category
               </label>
-              <input
-                type="time"
-                value={formData.time}
-                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+              <select 
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:border-transparent"
-              />
+              >
+                <option value="">Select category</option>
+                <option value="Volunteer">Volunteer</option>
+                <option value="Fundraising">Fundraising</option>
+                <option value="Community">Community</option>
+                <option value="Health">Health</option>
+                <option value="Education">Education</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4 items-end">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Start Time
+              </label>
+              <div className="flex gap-2 items-center">
+                <select
+                  value={startTime.hour}
+                  onChange={(e) => setStartTime({ ...startTime, hour: e.target.value })}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:border-transparent"
+                >
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
+                    <option key={h} value={h.toString()}>{h.toString().padStart(2, '0')}</option>
+                  ))}
+                </select>
+                <span className="text-gray-600 font-semibold">:</span>
+                <select
+                  value={startTime.minute}
+                  onChange={(e) => setStartTime({ ...startTime, minute: e.target.value })}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:border-transparent"
+                >
+                  {Array.from({ length: 60 }, (_, i) => i).map((m) => (
+                    <option key={m} value={m.toString().padStart(2, '0')}>{m.toString().padStart(2, '0')}</option>
+                  ))}
+                </select>
+                <select
+                  value={startTime.ampm}
+                  onChange={(e) => setStartTime({ ...startTime, ampm: e.target.value })}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:border-transparent bg-white"
+                >
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex items-center justify-center pb-2">
+              <span className="text-gray-700 font-semibold text-lg">TO</span>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                End Time
+              </label>
+              <div className="flex gap-2 items-center">
+                <select
+                  value={endTime.hour}
+                  onChange={(e) => setEndTime({ ...endTime, hour: e.target.value })}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:border-transparent"
+                >
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
+                    <option key={h} value={h.toString()}>{h.toString().padStart(2, '0')}</option>
+                  ))}
+                </select>
+                <span className="text-gray-600 font-semibold">:</span>
+                <select
+                  value={endTime.minute}
+                  onChange={(e) => setEndTime({ ...endTime, minute: e.target.value })}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:border-transparent"
+                >
+                  {Array.from({ length: 60 }, (_, i) => i).map((m) => (
+                    <option key={m} value={m.toString().padStart(2, '0')}>{m.toString().padStart(2, '0')}</option>
+                  ))}
+                </select>
+                <select
+                  value={endTime.ampm}
+                  onChange={(e) => setEndTime({ ...endTime, ampm: e.target.value })}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:border-transparent bg-white"
+                >
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+              </div>
             </div>
           </div>
 

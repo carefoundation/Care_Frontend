@@ -56,16 +56,28 @@ export default function LoginPage() {
         if (user) {
           localStorage.setItem('userEmail', user.email);
           localStorage.setItem('userRole', user.role || 'donor');
-          localStorage.setItem('userId', user.id);
+          localStorage.setItem('userId', user.id || user._id);
+          // Store permissions if available
+          if (user.permissions) {
+            localStorage.setItem('userPermissions', JSON.stringify(user.permissions));
+          } else {
+            localStorage.setItem('userPermissions', JSON.stringify([]));
+          }
         }
         
-        // Check if admin
+        // Check if admin or staff
         if (user && user.role === 'admin') {
-        setAdminSession();
-        setIsLoading(false);
-        router.push('/admin');
-        return;
-      }
+          setAdminSession();
+          setIsLoading(false);
+          router.push('/admin/dashboard');
+          return;
+        }
+        if (user && user.role === 'staff') {
+          setAdminSession();
+          setIsLoading(false);
+          router.push('/staff/dashboard');
+          return;
+        }
         
         setIsLoading(false);
         
@@ -88,7 +100,13 @@ export default function LoginPage() {
         if (response.user.role === 'admin') {
           setAdminSession();
           setIsLoading(false);
-          router.push('/admin');
+          router.push('/admin/dashboard');
+          return;
+        }
+        if (response.user.role === 'staff') {
+          setAdminSession();
+          setIsLoading(false);
+          router.push('/staff/dashboard');
           return;
         }
         
@@ -98,7 +116,13 @@ export default function LoginPage() {
           localStorage.removeItem('redirectAfterLogin');
           router.push(redirectUrl);
         } else {
-          router.push('/dashboard');
+          // Redirect to role-based dashboard
+          const role = response.user.role || 'donor';
+          if (role === 'donor' || role === 'beneficiary' || role === 'volunteer' || role === 'vendor' || role === 'fundraiser' || role === 'partner') {
+            router.push('/donor/dashboard');
+          } else {
+            router.push('/donor/dashboard');
+          }
         }
       }
     } catch (error: any) {

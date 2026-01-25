@@ -22,23 +22,41 @@ export default function CelebritiesPage() {
 
   useEffect(() => {
     fetchCelebrities();
+    
+    // Refresh when page gains focus (user returns from create page)
+    const handleFocus = () => {
+      fetchCelebrities();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   const fetchCelebrities = async () => {
     try {
       setLoading(true);
-      const response = await api.get<Celebrity[]>('/celebrities');
+      const response = await api.get<any>('/celebrities');
+      
+      // Handle both array and object with data property
+      let celebritiesData: any[] = [];
       if (Array.isArray(response)) {
-        const formatted = response.map((celebrity: any) => ({
-          id: celebrity._id || celebrity.id,
-          _id: celebrity._id,
-          name: celebrity.name || 'Unknown',
-          profession: celebrity.profession || 'N/A',
-          socialMedia: celebrity.socialMedia || 'N/A',
-          status: celebrity.status || 'active',
-        }));
-        setCelebrities(formatted);
+        celebritiesData = response;
+      } else if (response && response.data && Array.isArray(response.data)) {
+        celebritiesData = response.data;
       }
+      
+      const formatted = celebritiesData.map((celebrity: any) => ({
+        id: celebrity._id || celebrity.id,
+        _id: celebrity._id,
+        name: celebrity.name || 'Unknown',
+        profession: celebrity.profession || 'N/A',
+        socialMedia: celebrity.socialLinks?.instagram || celebrity.socialLinks?.youtube || 'N/A',
+        status: celebrity.status || 'active',
+      }));
+      setCelebrities(formatted);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         window.location.href = '/login';

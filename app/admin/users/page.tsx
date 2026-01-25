@@ -55,33 +55,35 @@ export default function UsersPage() {
       setLoading(true);
       const response = await api.get<User[]>('/users');
       if (Array.isArray(response)) {
-        const formattedUsers = response.map((user: any) => ({
-          id: user._id || user.id,
-          _id: user._id,
-          name: user.name || 'N/A',
-          email: user.email || 'N/A',
-          role: user.role || 'donor',
-          status: user.isApproved ? (user.isVerified ? 'active' : 'inactive') : 'pending',
-          registeredDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A',
-          lastLogin: 'N/A',
-          mobileNumber: user.mobileNumber,
-          isVerified: user.isVerified,
-          isApproved: user.isApproved,
-          // Include all user data for viewing
-          profileImage: user.profileImage,
-          documents: user.documents || [],
-          address: user.address,
-          city: user.city,
-          state: user.state,
-          pincode: user.pincode,
-          businessName: user.businessName,
-          businessType: user.businessType,
-          gstNumber: user.gstNumber,
-          website: user.website,
-          isActive: user.isActive,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
-        }));
+        const formattedUsers = response
+          .filter((user: any) => user.role !== 'admin') // Filter out admin users
+          .map((user: any) => ({
+            id: user._id || user.id,
+            _id: user._id,
+            name: user.name || 'N/A',
+            email: user.email || 'N/A',
+            role: user.role || 'donor',
+            status: user.isApproved ? (user.isVerified ? 'active' : 'inactive') : 'pending',
+            registeredDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A',
+            lastLogin: 'N/A',
+            mobileNumber: user.mobileNumber,
+            isVerified: user.isVerified,
+            isApproved: user.isApproved,
+            // Include all user data for viewing
+            profileImage: user.profileImage,
+            documents: user.documents || [],
+            address: user.address,
+            city: user.city,
+            state: user.state,
+            pincode: user.pincode,
+            businessName: user.businessName,
+            businessType: user.businessType,
+            gstNumber: user.gstNumber,
+            website: user.website,
+            isActive: user.isActive,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+          }));
         setUsers(formattedUsers);
       } else {
         setUsers([]);
@@ -111,6 +113,13 @@ export default function UsersPage() {
 
   const handleSave = async (data: Record<string, any>) => {
     if (selectedUser && selectedUser._id) {
+      // Prevent editing admin users
+      if (selectedUser.role === 'admin') {
+        showToast('Cannot edit admin users', 'error');
+        setEditModalOpen(false);
+        setSelectedUser(null);
+        return;
+      }
       try {
         setUpdating(selectedUser._id);
         
@@ -124,6 +133,12 @@ export default function UsersPage() {
         }
         if (updateData.isActive !== undefined) {
           updateData.isActive = updateData.isActive === 'true' || updateData.isActive === true;
+        }
+        
+        // Prevent changing role to admin
+        if (updateData.role === 'admin') {
+          showToast('Cannot change role to admin', 'error');
+          return;
         }
         
         // Remove status field as it's not a database field
@@ -209,6 +224,13 @@ export default function UsersPage() {
 
   const handleDeleteConfirm = async () => {
     if (selectedUser && selectedUser._id) {
+      // Prevent deleting admin users
+      if (selectedUser.role === 'admin') {
+        showToast('Cannot delete admin users', 'error');
+        setSelectedUser(null);
+        setConfirmModalOpen(false);
+        return;
+      }
       try {
         setUpdating(selectedUser._id);
         await api.delete(`/users/${selectedUser._id}`);

@@ -24,7 +24,7 @@ const VolunteerCard = forwardRef<HTMLDivElement, VolunteerCardProps>(({ voluntee
             <div className="absolute inset-0 flex flex-col items-center justify-center text-[#ffffff] z-10 p-4">
                 <h1 className="text-xl font-bold tracking-wide uppercase text-center leading-tight">Care Foundation Trust®</h1>
                 <p className="text-[10px] opacity-90 mt-1">Reg. No: CFT/2025/029</p>
-                <p className="text-[10px] opacity-90">Head Office: Mumbai - 400003</p>
+                <p className="text-[10px] opacity-90">Head Office: Navi Mumbai - 410210</p>
             </div>
             {/* Decorative Curve */}
             <div className="absolute -bottom-6 left-0 right-0 h-12 bg-[#ffffff] rounded-t-[50%] z-0"></div>
@@ -68,7 +68,9 @@ const VolunteerCard = forwardRef<HTMLDivElement, VolunteerCardProps>(({ voluntee
             <div className="flex flex-col">
                 <span className="text-[10px] text-[#6b7280] mb-1">Scan to Verify</span>
                 <QRCodeCanvas 
-                  value={`https://carefoundationtrust.org/verify/volunteer/${volunteer._id}`}
+                  value={typeof window !== 'undefined' 
+                    ? `${window.location.origin}/verify/volunteer/${volunteer._id}`
+                    : `https://carefoundationtrust.org/verify/volunteer/${volunteer._id}`}
                   size={60}
                   level={"M"}
                   fgColor="#1f2937"
@@ -99,13 +101,13 @@ const VolunteerCard = forwardRef<HTMLDivElement, VolunteerCardProps>(({ voluntee
             <div className="mt-auto pt-6 border-t border-[#e5e7eb]">
                 <h4 className="text-[#16a34a] font-bold text-sm mb-2">Care Foundation Trust®</h4>
                 <p className="text-xs text-[#4b5563] mb-1">
-                    <strong>Address:</strong> Shop No - S - 61, 2nd Flr, AL - EZZ Tower (SBUT), Ibrahim Rehmatullah Road, Bhendi Bazaar, Mumbai - 400003.
+                    <strong>Address:</strong> Alexander Tower, Sai World Empire Lane, opposite Swapnapoorti, Mhada Colony, Sector 36, Kharghar, Navi Mumbai, Maharashtra 410210.
                 </p>
                 <p className="text-xs text-[#4b5563] mb-1">
                     <strong>Email:</strong> carefoundationtrustorg@gmail.com
                 </p>
                 <p className="text-xs text-[#4b5563]">
-                    <strong>Phone:</strong> +91 9876543210
+                    <strong>Phone:</strong> +91 9136521052
                 </p>
             </div>
          </div>
