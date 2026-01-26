@@ -117,6 +117,7 @@ export default function ClientSidebar() {
                       src="/Logo.png"
                       alt="Care Foundation Trust Logo"
                       fill
+                      sizes="56px"
                       className="object-contain"
                       priority
                     />
@@ -129,6 +130,7 @@ export default function ClientSidebar() {
                     src="/Logo.png"
                     alt="Care Foundation Trust Logo"
                     fill
+                    sizes="48px"
                     className="object-contain"
                     priority
                   />

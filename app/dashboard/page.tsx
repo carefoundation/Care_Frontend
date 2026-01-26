@@ -58,6 +58,17 @@ export default function DashboardPage() {
       let partnerFormApprovedValue = false;
       try {
         const userRes = await api.get<any>('/users/me');
+        if (!userRes) {
+          // User not found - clear token and redirect
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userId');
+          }
+          window.location.href = '/login';
+          return;
+        }
         if (userRes && !userRes.isApproved && role !== 'admin') {
           // Redirect to login if not approved
           alert('Your account is pending admin approval. Please wait for approval before accessing the dashboard.');
@@ -103,6 +114,17 @@ export default function DashboardPage() {
         }
       } catch (error) {
         console.error('Failed to fetch user data:', error);
+        // If user not found, clear token and redirect to login
+        if (error instanceof ApiError && (error.message === 'User not found' || error.status === 401)) {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userId');
+          }
+          window.location.href = '/login';
+          return;
+        }
       }
 
       // Fetch user donations
@@ -211,11 +233,20 @@ export default function DashboardPage() {
         setStats(calculatedStats);
       }
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        window.location.href = '/login';
-      } else {
-        console.error('Failed to fetch dashboard data:', error);
+      if (error instanceof ApiError) {
+        if (error.status === 401 || error.message === 'User not found') {
+          // Clear token and redirect to login
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userId');
+          }
+          window.location.href = '/login';
+          return;
+        }
       }
+      console.error('Failed to fetch dashboard data:', error);
     } finally {
       setLoading(false);
     }

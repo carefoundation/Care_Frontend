@@ -248,6 +248,19 @@ export default function BecomePartnerPage() {
     setSuccess(false);
     
     try {
+      // Validate required fields
+      if (!formData.name || !formData.name.trim()) {
+        setError('Please provide your name');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!formData.partnerFor) {
+        setError('Please select a partner type');
+        setIsSubmitting(false);
+        return;
+      }
+
       // Convert partner type to lowercase to match backend enum
       const partnerType = formData.partnerFor.toLowerCase();
       
@@ -259,11 +272,11 @@ export default function BecomePartnerPage() {
       
       await api.post('/partners', {
         type: partnerType,
-        name: formData.name,
-        description: formData.message || 'Partner application',
-        phone: formData.contactNumber,
-        email: formData.email,
-        address: formData.addressOfOperation,
+        name: formData.name.trim(),
+        description: formData.message?.trim() || `Partner application for ${formData.name.trim()}`,
+        phone: formData.contactNumber || null,
+        email: formData.email || null,
+        address: formData.addressOfOperation || null,
       });
       setSuccess(true);
       setFormData({

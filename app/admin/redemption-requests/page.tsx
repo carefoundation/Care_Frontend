@@ -457,11 +457,11 @@ export default function RedemptionRequestsPage() {
             'Paid By': selectedRequest.paidBy?.name || '-',
             'Rejection Reason': selectedRequest.rejectionReason || '-',
             '--- Bank Details ---': '',
-            'Account Holder Name': selectedRequest.partnerId?.bankDetails?.accountHolderName || selectedRequest.partnerId?.bankDetails?.accountHolder || 'N/A',
+            'Account Holder Name': selectedRequest.partnerId?.bankDetails?.accountHolderName || 'N/A',
             'Account Number': selectedRequest.partnerId?.bankDetails?.accountNumber || 'N/A',
-            'IFSC Code': selectedRequest.partnerId?.bankDetails?.ifscCode || selectedRequest.partnerId?.bankDetails?.ifsc || 'N/A',
+            'IFSC Code': selectedRequest.partnerId?.bankDetails?.ifscCode || 'N/A',
             'Bank Name': selectedRequest.partnerId?.bankDetails?.bankName || 'N/A',
-            'Branch Name': selectedRequest.partnerId?.bankDetails?.branchName || selectedRequest.partnerId?.bankDetails?.branch || 'N/A',
+            'Branch Name': selectedRequest.partnerId?.bankDetails?.branchName || 'N/A',
           }}
         />
       )}

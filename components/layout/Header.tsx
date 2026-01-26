@@ -187,6 +187,7 @@ export default function Header() {
                 src="/Logo.png"
                 alt="Care Foundation Trust Logo"
                 fill
+                sizes="(max-width: 640px) 80px, 96px"
                 className="object-contain"
                 priority
               />

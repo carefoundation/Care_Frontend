@@ -224,7 +224,10 @@ export default function ViewModal({ isOpen, onClose, title, data }: ViewModalPro
                             className="max-w-full h-auto rounded-lg border border-gray-200 max-h-96 object-contain"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
-                              e.currentTarget.nextElementSibling!.style.display = 'block';
+                              const nextSibling = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (nextSibling) {
+                                nextSibling.style.display = 'block';
+                              }
                             }}
                           />
                           <div style={{ display: 'none' }} className="text-red-500 text-sm mt-2">
