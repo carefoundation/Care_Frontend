@@ -128,6 +128,7 @@ export default function CreatePathologyPage() {
         pincode: formData.pincode,
         status: isAdmin ? 'approved' : 'pending', // Admin creates are auto-approved, users need approval
         formData: {
+          category: 'pathology',
           testTypes: formData.testTypes,
           operatingHours: formData.operatingHours,
           timing: formData.timing,

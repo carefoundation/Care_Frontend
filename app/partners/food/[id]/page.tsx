@@ -412,17 +412,11 @@ export default function FoodPartnerDetailPage() {
                     variant="outline" 
                     size="sm" 
                     className="w-full border-gray-200 hover:border-[#10b981] hover:text-[#10b981] transition-all text-xs sm:text-sm font-medium"
-                    onClick={() => {
-                      const address = partner.address || `${partner.city || ''} ${partner.state || ''}`.trim() || '';
-                      if (address) {
-                        window.open(`https://maps.google.com/?q=${encodeURIComponent(address)}`, '_blank');
-                      } else {
-                        showToast('Address not available', 'error');
-                      }
-                    }}
+                    onClick={handleGetCoupon}
+                    disabled={generatingCoupon}
                   >
-                    <Map className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
-                    View Map
+                    <Ticket className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+                    {generatingCoupon ? 'Generating...' : 'Get Coupon'}
                   </Button>
                   <button
                     className="w-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold text-xs sm:text-sm py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-200 shadow-md hover:shadow-lg"

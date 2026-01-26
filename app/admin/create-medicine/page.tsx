@@ -131,6 +131,7 @@ export default function CreateMedicinePage() {
         programs: formData.medicineType ? [formData.medicineType] : [],
         status: isAdmin ? 'approved' : 'pending', // Admin creates are auto-approved, users need approval
         formData: {
+          category: 'medicine',
           operatingHours: formData.operatingHours,
           timing: formData.timing,
           contactName: formData.contactName,

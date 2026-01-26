@@ -117,6 +117,7 @@ export default function CreateHospitalPage() {
         programs: formData.specializations ? formData.specializations.split(',').map(s => s.trim()) : [],
         status: isAdmin ? 'approved' : 'pending', // Admin creates are auto-approved, users need approval
         formData: {
+          category: 'hospital',
           bedCapacity: formData.bedCapacity,
           timing: formData.timing,
           contactName: formData.contactName,

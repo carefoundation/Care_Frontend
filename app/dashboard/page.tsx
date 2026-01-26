@@ -98,9 +98,17 @@ export default function DashboardPage() {
               setPartnerFormApproved(false);
             }
           } catch (error) {
-            console.error('Failed to fetch partner record:', error);
-            partnerFormApprovedValue = false;
-            setPartnerFormApproved(false);
+            // Handle 403 gracefully - user might not have permission to view all partners
+            if (error instanceof ApiError && error.status === 403) {
+              console.warn('Access denied to partners list, checking individual partner record');
+              // Try to find partner record by user ID if possible
+              partnerFormApprovedValue = false;
+              setPartnerFormApproved(false);
+            } else {
+              console.error('Failed to fetch partner record:', error);
+              partnerFormApprovedValue = false;
+              setPartnerFormApproved(false);
+            }
           }
           
           // Show KYC modal if approved but KYC not completed
@@ -114,8 +122,8 @@ export default function DashboardPage() {
         }
       } catch (error) {
         console.error('Failed to fetch user data:', error);
-        // If user not found, clear token and redirect to login
-        if (error instanceof ApiError && (error.message === 'User not found' || error.status === 401)) {
+        // If user not found or unauthorized, clear token and redirect to login
+        if (error instanceof ApiError && (error.message === 'User not found' || error.status === 401 || error.status === 403)) {
           if (typeof window !== 'undefined') {
             localStorage.removeItem('userToken');
             localStorage.removeItem('userEmail');
@@ -140,7 +148,12 @@ export default function DashboardPage() {
           setRecentDonations(formatted);
         }
       } catch (error) {
-        console.error('Failed to fetch donations:', error);
+        // Handle 403 gracefully - user might not have permission
+        if (error instanceof ApiError && error.status === 403) {
+          console.warn('Access denied to donations');
+        } else {
+          console.error('Failed to fetch donations:', error);
+        }
       }
 
       // Fetch user campaigns
@@ -163,7 +176,12 @@ export default function DashboardPage() {
           setMyCampaigns(formatted);
         }
       } catch (error) {
-        console.error('Failed to fetch campaigns:', error);
+        // Handle 403 gracefully - user might not have permission
+        if (error instanceof ApiError && error.status === 403) {
+          console.warn('Access denied to campaigns');
+        } else {
+          console.error('Failed to fetch campaigns:', error);
+        }
       }
 
       // Fetch wallet data for vendors
@@ -174,7 +192,12 @@ export default function DashboardPage() {
             setWalletData(walletRes);
           }
         } catch (error) {
-          console.error('Failed to fetch wallet:', error);
+          // Handle 403 gracefully - user might not have permission or not be a vendor
+          if (error instanceof ApiError && error.status === 403) {
+            console.warn('Access denied to wallet');
+          } else {
+            console.error('Failed to fetch wallet:', error);
+          }
         }
       }
 
@@ -201,7 +224,12 @@ export default function DashboardPage() {
               setAvailableCoupons(available);
             }
           } catch (error) {
-            console.error('Failed to fetch coupon stats:', error);
+            // Handle 403 gracefully - partner might not have permission yet
+            if (error instanceof ApiError && error.status === 403) {
+              console.warn('Access denied to coupons');
+            } else {
+              console.error('Failed to fetch coupon stats:', error);
+            }
           }
         } else {
           // Reset coupon data if partner form is not approved
@@ -219,7 +247,12 @@ export default function DashboardPage() {
               setMyClaims(claimsRes);
             }
           } catch (error) {
-            console.error('Failed to fetch partner claims:', error);
+            // Handle 403 gracefully - partner might not have permission yet
+            if (error instanceof ApiError && error.status === 403) {
+              console.warn('Access denied to coupon claims');
+            } else {
+              console.error('Failed to fetch partner claims:', error);
+            }
           }
         } else {
           // Reset claims if partner form is not approved
@@ -236,6 +269,17 @@ export default function DashboardPage() {
       if (error instanceof ApiError) {
         if (error.status === 401 || error.message === 'User not found') {
           // Clear token and redirect to login
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userId');
+          }
+          window.location.href = '/login';
+          return;
+        }
+        // 403 on main user endpoint should also redirect
+        if (error.status === 403 && error.message?.includes('authorized')) {
           if (typeof window !== 'undefined') {
             localStorage.removeItem('userToken');
             localStorage.removeItem('userEmail');

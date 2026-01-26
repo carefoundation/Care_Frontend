@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, MapPin, Phone, Mail, Clock, Map, Stethoscope, Heart, Loader2, Ticket, X, QrCode, Copy, CheckCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, Mail, Clock, Map, FlaskConical, Heart, Loader2, Ticket, X, QrCode, Copy, CheckCircle } from 'lucide-react';
 import Footer from '@/components/layout/Footer';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { api, ApiError } from '@/lib/api';
 import { showToast } from '@/lib/toast';
 
-export default function HealthPartnerDetailPage() {
+export default function PathologyPartnerDetailPage() {
   const params = useParams();
   const router = useRouter();
   const partnerId = params?.id as string;
@@ -34,19 +34,12 @@ export default function HealthPartnerDetailPage() {
       setLoading(true);
       const data = await api.get<any>(`/partners/${partnerId}`);
       if (data) {
-        // Extract image from formData if photo/logo are not available
         let photo = data.photo || data.logo;
         if (!photo && data.formData) {
           if (data.formData.banner) {
             photo = data.formData.banner;
-          } else if (data.formData.clinicPhotos && Array.isArray(data.formData.clinicPhotos) && data.formData.clinicPhotos.length > 0) {
-            photo = data.formData.clinicPhotos[0];
           } else if (data.formData.labImages && Array.isArray(data.formData.labImages) && data.formData.labImages.length > 0) {
             photo = data.formData.labImages[0];
-          } else if (data.formData.hospitalImages && Array.isArray(data.formData.hospitalImages) && data.formData.hospitalImages.length > 0) {
-            photo = data.formData.hospitalImages[0];
-          } else if (data.formData.pharmacyImages && Array.isArray(data.formData.pharmacyImages) && data.formData.pharmacyImages.length > 0) {
-            photo = data.formData.pharmacyImages[0];
           }
         }
         setPartner({
@@ -70,21 +63,19 @@ export default function HealthPartnerDetailPage() {
     try {
       setGeneratingCoupon(true);
       
-      // Check if user is logged in
       const token = localStorage.getItem('userToken');
       if (!token || token.trim() === '') {
         showToast('Please login to get a coupon', 'info');
-        localStorage.setItem('redirectAfterLogin', `/partners/health/${partnerId}`);
+        localStorage.setItem('redirectAfterLogin', `/partners/pathology/${partnerId}`);
         router.push('/login');
         return;
       }
 
-      // Generate coupon for health partner
       const response = await api.post<any>('/coupons', {
-        amount: 0, // Free coupon for health partner
-        paymentId: `health-partner-${partnerId}-${Date.now()}`,
+        amount: 0,
+        paymentId: `pathology-partner-${partnerId}-${Date.now()}`,
         paymentStatus: 'completed',
-        beneficiaryName: partner?.name || partner?.businessName || 'Health Partner',
+        beneficiaryName: partner?.name || partner?.businessName || 'Pathology Partner',
         partnerId: partnerId,
       });
 
@@ -98,7 +89,7 @@ export default function HealthPartnerDetailPage() {
       if (error instanceof ApiError) {
         if (error.status === 401) {
           showToast('Please login to get a coupon', 'error');
-          localStorage.setItem('redirectAfterLogin', `/partners/health/${partnerId}`);
+          localStorage.setItem('redirectAfterLogin', `/partners/pathology/${partnerId}`);
           router.push('/login');
         } else {
           showToast(`Failed to generate coupon: ${error.message}`, 'error');
@@ -134,9 +125,9 @@ export default function HealthPartnerDetailPage() {
       <div className="min-h-screen bg-gray-50 pt-16 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Partner Not Found</h1>
-          <Button onClick={() => router.push('/partners/health')}>
+          <Button onClick={() => router.push('/partners/pathology')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Health Partners
+            Back to Pathology Partners
           </Button>
         </div>
       </div>
@@ -148,11 +139,11 @@ export default function HealthPartnerDetailPage() {
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <button
-            onClick={() => router.push('/partners/health')}
+            onClick={() => router.push('/partners/pathology')}
             className="inline-flex items-center text-gray-600 hover:text-[#10b981] transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Health Partners
+            Back to Pathology Partners
           </button>
         </div>
 
@@ -160,7 +151,7 @@ export default function HealthPartnerDetailPage() {
           <div className="lg:col-span-7">
             <div className="relative h-64 sm:h-80 lg:h-96 w-full overflow-hidden bg-gray-200">
               <Image
-                src={partner.photo || partner.logo || 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&h=600&fit=crop'}
+                src={partner.photo || partner.logo || 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?w=800&h=600&fit=crop'}
                 alt={partner.name || partner.businessName || 'Partner'}
                 fill
                 className="object-cover"
@@ -169,7 +160,7 @@ export default function HealthPartnerDetailPage() {
               <div className="absolute top-3 sm:top-4 left-3 sm:left-4">
                 <div className="bg-white/90 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg shadow-md">
                   <Image
-                    src={partner.logo || 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=800&h=400&fit=crop'}
+                    src={partner.logo || 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?w=800&h=400&fit=crop'}
                     alt={`${partner.name || partner.businessName || 'Partner'} logo`}
                     width={120}
                     height={40}
@@ -185,7 +176,7 @@ export default function HealthPartnerDetailPage() {
               <p className="text-gray-600 text-lg sm:text-xl mb-8 leading-relaxed">{partner.description || partner.about}</p>
 
               <div className="mb-8">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Programs</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Tests Available</h2>
                 <div className="flex flex-wrap gap-3 sm:gap-4">
                   {(partner.programs || []).map((program: string, index: number) => (
                     <span
@@ -222,7 +213,7 @@ export default function HealthPartnerDetailPage() {
               <div className="mb-6 sm:mb-8">
                 <div className="flex items-center gap-3 mb-5 sm:mb-6 pb-4 sm:pb-5 border-b-2 border-gray-300">
                   <div className="bg-[#10b981] p-2 rounded-lg">
-                    <Stethoscope className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                    <FlaskConical className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Contact Information</h2>
                 </div>
@@ -234,7 +225,7 @@ export default function HealthPartnerDetailPage() {
                         <div className="text-xs font-semibold text-gray-500 mb-1.5 sm:mb-2 uppercase tracking-wide">Phone</div>
                         <div className="flex items-center gap-2 sm:gap-2.5 text-sm text-gray-700">
                           <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#10b981] flex-shrink-0" />
-                          <a href={`tel:${partner.phone || partner.mobileNumber || partner.contact || ''}`} className="hover:text-[#10b981] transition-colors font-medium">
+                          <a href={`tel:${partner.phone || partner.mobileNumber || partner.contact}`} className="hover:text-[#10b981] transition-colors font-medium">
                             {partner.phone || partner.mobileNumber || partner.contact || 'N/A'}
                           </a>
                         </div>
@@ -243,8 +234,8 @@ export default function HealthPartnerDetailPage() {
                         <div className="text-xs font-semibold text-gray-500 mb-1.5 sm:mb-2 uppercase tracking-wide">Email</div>
                         <div className="flex items-center gap-2 sm:gap-2.5 text-sm text-gray-700">
                           <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#10b981] flex-shrink-0" />
-                          <a href={`mailto:${partner.email || ''}`} className="hover:text-[#10b981] break-all transition-colors font-medium">
-                            {partner.email || 'N/A'}
+                          <a href={`mailto:${partner.email}`} className="hover:text-[#10b981] break-all transition-colors font-medium">
+                            {partner.email}
                           </a>
                         </div>
                       </div>
@@ -265,16 +256,6 @@ export default function HealthPartnerDetailPage() {
                       <div className="flex items-center gap-2 sm:gap-2.5 text-sm text-gray-700">
                         <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#10b981] flex-shrink-0" />
                         <span className="font-medium">{partner.operatingHours || partner.hours}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {(partner.formData?.foundationFees || partner.foundationFees) && (
-                    <div className="pb-2 sm:pb-3 border-b border-gray-100">
-                      <div className="text-xs font-semibold text-gray-500 mb-1.5 sm:mb-2 uppercase tracking-wide">NGO Fees</div>
-                      <div className="flex items-center gap-2 sm:gap-2.5 text-sm text-gray-700">
-                        <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#10b981] flex-shrink-0" />
-                        <span className="font-medium">₹{partner.formData?.foundationFees || partner.foundationFees}</span>
                       </div>
                     </div>
                   )}
@@ -392,7 +373,6 @@ export default function HealthPartnerDetailPage() {
         </div>
       </div>
       
-      {/* Coupon Modal */}
       {showCouponModal && generatedCoupon && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 relative">
@@ -509,3 +489,4 @@ export default function HealthPartnerDetailPage() {
     </div>
   );
 }
+

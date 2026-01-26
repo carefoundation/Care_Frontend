@@ -210,6 +210,7 @@ export default function CreateDoctorPage() {
         pincode: formData.pincode,
         status: isAdmin ? 'approved' : 'pending', // Admin creates are auto-approved, users need approval
         formData: {
+          category: 'doctor',
           username: formData.username,
           registrationNo: formData.registrationNo,
           qualification: formData.qualification,
