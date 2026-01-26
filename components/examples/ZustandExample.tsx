@@ -1,35 +1,37 @@
 'use client';
 
-import { useAppStore } from '@/stores/useAppStore';
+import { useAppSelector, useAppDispatch } from '@/stores/hooks';
+import { setUser, clearUser, setTheme, setLoading } from '@/stores/appSlice';
 import Button from '@/components/ui/Button';
 
 export default function ZustandExample() {
-  const { user, theme, isLoading, setUser, clearUser, setTheme, setLoading } = useAppStore();
+  const { user, theme, isLoading } = useAppSelector((state) => state.app);
+  const dispatch = useAppDispatch();
 
   const handleLogin = () => {
-    setUser({
+    dispatch(setUser({
       id: '123',
       name: 'John Doe',
       email: 'john@example.com',
       token: 'sample-token-123',
-    });
+    }));
   };
 
   const handleToggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
+    dispatch(setTheme(newTheme));
   };
 
   const handleLoading = () => {
-    setLoading(true);
+    dispatch(setLoading(true));
     setTimeout(() => {
-      setLoading(false);
+      dispatch(setLoading(false));
     }, 2000);
   };
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md space-y-4">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">Zustand Store Example</h2>
+      <h2 className="text-2xl font-bold text-gray-900 mb-4">Redux Toolkit Store Example</h2>
       
       <div className="space-y-3">
         <div>
@@ -69,7 +71,7 @@ export default function ZustandExample() {
 
       <div className="flex flex-wrap gap-2 pt-4 border-t">
         <Button onClick={handleLogin} size="sm">Set User</Button>
-        <Button onClick={clearUser} variant="outline" size="sm">Clear User</Button>
+        <Button onClick={() => dispatch(clearUser())} variant="outline" size="sm">Clear User</Button>
         <Button onClick={handleToggleTheme} variant="outline" size="sm">Toggle Theme</Button>
         <Button onClick={handleLoading} variant="outline" size="sm" disabled={isLoading}>
           {isLoading ? 'Loading...' : 'Test Loading'}

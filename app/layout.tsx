@@ -4,6 +4,7 @@ import "./globals.css";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
 import dynamic from "next/dynamic";
 import WhatsAppButtonWrapper from "@/components/layout/WhatsAppButtonWrapper";
+import ReduxProvider from "@/components/providers/ReduxProvider";
 
 const Header = dynamic(() => import("@/components/layout/Header"), { ssr: true });
 
@@ -41,9 +42,11 @@ export default function RootLayout({
         className={`${inter.variable} ${robotoMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <Header />
-        {children}
-        <WhatsAppButtonWrapper />
+        <ReduxProvider>
+          <Header />
+          {children}
+          <WhatsAppButtonWrapper />
+        </ReduxProvider>
       </body>
     </html>
   );
