@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Download, FileText, TrendingUp, DollarSign, BarChart3 } from 'lucide-react';
+import { Download, FileText, TrendingUp, Wallet, BarChart3 } from 'lucide-react';
 
 export default function ReportsPage() {
   const router = useRouter();
@@ -38,7 +38,7 @@ export default function ReportsPage() {
     {
       title: 'Financial Reports',
       description: 'View detailed financial reports and transactions',
-      icon: DollarSign,
+      icon: Wallet,
       color: 'text-[#10b981]',
       bg: 'bg-[#ecfdf5]',
     },

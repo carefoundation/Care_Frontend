@@ -155,8 +155,8 @@ export default function VolunteerCertificatesPage() {
     {
       header: 'Hours Completed',
       accessor: 'hoursCompleted' as keyof Certificate,
-      render: (value: number) => (
-        <span className="font-semibold text-[#10b981]">{value} hrs</span>
+      render: (value: any, row: Certificate) => (
+        <span className="font-semibold text-[#10b981]">{value || 0} hrs</span>
       ),
     },
     {
@@ -251,7 +251,13 @@ export default function VolunteerCertificatesPage() {
             </div>
             <div className="flex-1 overflow-auto p-8 bg-gray-100 flex justify-center">
                <div className="scale-75 origin-top">
-                  <CertificateTemplate certificate={selectedCertificate} />
+                  <CertificateTemplate certificate={{
+                    volunteerName: selectedCertificate.volunteerName,
+                    certificateType: selectedCertificate.certificateType || 'Volunteer Certificate',
+                    issueDate: selectedCertificate.issueDate || 'N/A',
+                    hoursCompleted: selectedCertificate.hoursCompleted,
+                    id: selectedCertificate.id || selectedCertificate._id,
+                  }} />
                </div>
             </div>
             <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
@@ -270,7 +276,13 @@ export default function VolunteerCertificatesPage() {
       {/* Hidden Certificate for Generation */}
       <div className="fixed left-[-9999px] top-[-9999px]">
         {selectedCertificate && (
-          <CertificateTemplate ref={certificateRef} certificate={selectedCertificate} />
+          <CertificateTemplate ref={certificateRef} certificate={{
+            volunteerName: selectedCertificate.volunteerName,
+            certificateType: selectedCertificate.certificateType || 'Volunteer Certificate',
+            issueDate: selectedCertificate.issueDate || 'N/A',
+            hoursCompleted: selectedCertificate.hoursCompleted,
+            id: selectedCertificate.id || selectedCertificate._id,
+          }} />
         )}
       </div>
     </div>

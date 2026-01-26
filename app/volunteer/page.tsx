@@ -1,13 +1,18 @@
 'use client';
 
-import { useState } from 'react';
-import { Users, Heart, Award, Calendar, Mail, Phone, MapPin, CheckCircle, TrendingUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Users, Heart, Award, Calendar, Mail, Phone, MapPin, CheckCircle, TrendingUp, Loader2 } from 'lucide-react';
 import Footer from '@/components/layout/Footer';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { api, ApiError } from '@/lib/api';
+import { showToast } from '@/lib/toast';
 
 export default function VolunteerPage() {
+  const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -21,6 +26,21 @@ export default function VolunteerPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('userToken');
+      const loggedIn = !!token && token.trim() !== '';
+      setIsLoggedIn(loggedIn);
+      setCheckingAuth(false);
+      
+      if (!loggedIn) {
+        localStorage.setItem('redirectAfterLogin', '/volunteer');
+        showToast('Please login to become a volunteer', 'info');
+        router.push('/login');
+      }
+    }
+  }, [router]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -98,6 +118,18 @@ export default function VolunteerPage() {
       icon: Calendar,
     },
   ];
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-16 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#10b981]" />
+      </div>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return null; // Will redirect to login
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16">

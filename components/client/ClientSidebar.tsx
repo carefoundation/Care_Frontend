@@ -1,13 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   Heart,
-  DollarSign,
   Target,
   Ticket,
   User,
@@ -44,42 +43,48 @@ const vendorItems = [
   { href: '/dashboard/coupons', label: 'Coupons', icon: Ticket },
 ];
 
+const partnerItems = [
+  { href: '/dashboard/redeem-coupon', label: 'Redeem Coupon', icon: Ticket },
+];
+
 const fundraiserItems = [
   { href: '/dashboard/fundraisers', label: 'My Fundraisers', icon: TrendingUp },
-  { href: '/dashboard/withdrawals', label: 'Withdrawals', icon: DollarSign },
+  { href: '/dashboard/withdrawals', label: 'Withdrawals', icon: Wallet },
   { href: '/dashboard/coupons', label: 'Issue Coupons', icon: Ticket },
 ];
 
-type UserRole = 'donor' | 'beneficiary' | 'volunteer' | 'vendor' | 'fundraiser';
+type UserRole = 'donor' | 'beneficiary' | 'volunteer' | 'vendor' | 'fundraiser' | 'partner';
 
 export default function ClientSidebar() {
   const pathname = usePathname();
   const { isCollapsed, setIsCollapsed } = useSidebar();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole>('donor');
+  const [dashboardUrl, setDashboardUrl] = useState('/donor/dashboard');
+  const [isMounted, setIsMounted] = useState(false);
   
-  // TODO: Get user role from auth context
-  const getUserRole = (): UserRole => {
-    if (typeof window !== 'undefined') {
-      const role = localStorage.getItem('userRole') as UserRole | null;
-      return role || 'donor';
+  // Get user role and dashboard URL on client side only
+  useEffect(() => {
+    setIsMounted(true);
+    const role = localStorage.getItem('userRole');
+    
+    // Set user role (only if it's a valid UserRole)
+    const validRoles: UserRole[] = ['donor', 'beneficiary', 'volunteer', 'vendor', 'fundraiser', 'partner'];
+    if (role && validRoles.includes(role as UserRole)) {
+      setUserRole(role as UserRole);
+    } else {
+      setUserRole('donor');
     }
-    return 'donor';
-  };
-  
-  const userRole = getUserRole();
-  
-  // Get dashboard URL based on role
-  const getDashboardUrl = () => {
-    if (typeof window !== 'undefined') {
-      const role = localStorage.getItem('userRole');
-      if (role === 'admin') return '/admin/dashboard';
-      if (role === 'staff') return '/staff/dashboard';
-      return '/donor/dashboard';
+    
+    // Get dashboard URL based on role
+    if (role === 'admin') {
+      setDashboardUrl('/admin/dashboard');
+    } else if (role === 'staff') {
+      setDashboardUrl('/staff/dashboard');
+    } else {
+      setDashboardUrl('/donor/dashboard');
     }
-    return '/donor/dashboard';
-  };
-  
-  const dashboardUrl = getDashboardUrl();
+  }, []);
 
   return (
     <>
@@ -180,7 +185,7 @@ export default function ClientSidebar() {
             </div>
 
             {/* Role-based Menu Items */}
-            {userRole === 'volunteer' && (
+            {isMounted && userRole === 'volunteer' && (
               <div className="mt-4 pt-4 border-t border-gray-200">
                 {!isCollapsed && (
                   <p className="text-xs font-semibold text-gray-500 uppercase mb-2 px-4">Volunteer</p>
@@ -209,7 +214,7 @@ export default function ClientSidebar() {
               </div>
             )}
 
-            {userRole === 'vendor' && (
+            {isMounted && userRole === 'vendor' && (
               <div className="mt-4 pt-4 border-t border-gray-200">
                 {!isCollapsed && (
                   <p className="text-xs font-semibold text-gray-500 uppercase mb-2 px-4">Vendor</p>
@@ -238,13 +243,42 @@ export default function ClientSidebar() {
               </div>
             )}
 
-            {userRole === 'fundraiser' && (
+            {isMounted && userRole === 'fundraiser' && (
               <div className="mt-4 pt-4 border-t border-gray-200">
                 {!isCollapsed && (
                   <p className="text-xs font-semibold text-gray-500 uppercase mb-2 px-4">Fundraiser</p>
                 )}
                 <div className="space-y-1">
                   {fundraiserItems.map((item) => {
+                    const isActive = pathname === item.href || (pathname?.startsWith(item.href + '/') && pathname.split('/').length === item.href.split('/').length + 1);
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setIsMobileOpen(false)}
+                        className={clsx(
+                          'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group',
+                          isActive
+                            ? 'bg-[#10b981] text-white shadow-md'
+                            : 'text-gray-700 hover:bg-[#ecfdf5] hover:text-[#10b981]'
+                        )}
+                      >
+                        <item.icon className="h-5 w-5 flex-shrink-0" />
+                        {!isCollapsed && <span className="font-medium">{item.label}</span>}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {isMounted && userRole === 'partner' && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                {!isCollapsed && (
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2 px-4">Partner</p>
+                )}
+                <div className="space-y-1">
+                  {partnerItems.map((item) => {
                     const isActive = pathname === item.href || (pathname?.startsWith(item.href + '/') && pathname.split('/').length === item.href.split('/').length + 1);
                     return (
                       <Link

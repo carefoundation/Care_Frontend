@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Target, Upload, DollarSign, Calendar, MapPin, FileText, Image as ImageIcon } from 'lucide-react';
+import { Target, Upload, Calendar, MapPin, FileText, Image as ImageIcon } from 'lucide-react';
 import Footer from '@/components/layout/Footer';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -236,7 +236,7 @@ export default function CreateFundraiserPage() {
                         Goal Amount (₹) *
                       </label>
                       <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 font-semibold">₹</span>
                         <input
                           type="number"
                           id="goalAmount"

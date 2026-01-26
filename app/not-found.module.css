@@ -1,0 +1,1128 @@
+/* Design Inspired by one of Stefan Devai's Design on Dribble */
+
+.wrapper {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+}
+
+.container {
+  --color-0: #fff;
+  --color-1: #111;
+  --color-2: #222;
+  --color-3: #333;
+  --color-4: #2e2e2e;
+  --color-5: #d2b48c;
+  --color-6: #b22222;
+  --color-7: #871a1a;
+  --color-8: #ff6347;
+  --color-9: #ff3814;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-1);
+  background-image: linear-gradient(
+      to top,
+      var(--color-2) 5%,
+      var(--color-1) 6%,
+      var(--color-1) 7%,
+      transparent 7%
+    ),
+    linear-gradient(to bottom, var(--color-1) 30%, transparent 80%),
+    linear-gradient(to right, var(--color-2), var(--color-4) 5%, transparent 5%),
+    linear-gradient(
+      to right,
+      transparent 6%,
+      var(--color-2) 6%,
+      var(--color-4) 9%,
+      transparent 9%
+    ),
+    linear-gradient(
+      to right,
+      transparent 27%,
+      var(--color-2) 27%,
+      var(--color-4) 34%,
+      transparent 34%
+    ),
+    linear-gradient(
+      to right,
+      transparent 51%,
+      var(--color-2) 51%,
+      var(--color-4) 57%,
+      transparent 57%
+    ),
+    linear-gradient(to bottom, var(--color-1) 35%, transparent 35%),
+    linear-gradient(
+      to right,
+      transparent 42%,
+      var(--color-2) 42%,
+      var(--color-4) 44%,
+      transparent 44%
+    ),
+    linear-gradient(
+      to right,
+      transparent 45%,
+      var(--color-2) 45%,
+      var(--color-4) 47%,
+      transparent 47%
+    ),
+    linear-gradient(
+      to right,
+      transparent 48%,
+      var(--color-2) 48%,
+      var(--color-4) 50%,
+      transparent 50%
+    ),
+    linear-gradient(
+      to right,
+      transparent 87%,
+      var(--color-2) 87%,
+      var(--color-4) 91%,
+      transparent 91%
+    ),
+    linear-gradient(to bottom, var(--color-1) 37.5%, transparent 37.5%),
+    linear-gradient(
+      to right,
+      transparent 14%,
+      var(--color-2) 14%,
+      var(--color-4) 20%,
+      transparent 20%
+    ),
+    linear-gradient(to bottom, var(--color-1) 40%, transparent 40%),
+    linear-gradient(
+      to right,
+      transparent 10%,
+      var(--color-2) 10%,
+      var(--color-4) 13%,
+      transparent 13%
+    ),
+    linear-gradient(
+      to right,
+      transparent 21%,
+      var(--color-2) 21%,
+      #1a1a1a 25%,
+      transparent 25%
+    ),
+    linear-gradient(
+      to right,
+      transparent 58%,
+      var(--color-2) 58%,
+      var(--color-4) 64%,
+      transparent 64%
+    ),
+    linear-gradient(
+      to right,
+      transparent 92%,
+      var(--color-2) 92%,
+      var(--color-4) 95%,
+      transparent 95%
+    ),
+    linear-gradient(to bottom, var(--color-1) 48%, transparent 48%),
+    linear-gradient(
+      to right,
+      transparent 96%,
+      var(--color-2) 96%,
+      #1a1a1a 99%,
+      transparent 99%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 68.5%,
+      transparent 76%,
+      var(--color-1) 76%,
+      var(--color-1) 77.5%,
+      transparent 77.5%,
+      transparent 86%,
+      var(--color-1) 86%,
+      var(--color-1) 87.5%,
+      transparent 87.5%
+    ),
+    linear-gradient(
+      to right,
+      transparent 35%,
+      var(--color-2) 35%,
+      var(--color-4) 41%,
+      transparent 41%
+    ),
+    linear-gradient(to bottom, var(--color-1) 68%, transparent 68%),
+    linear-gradient(
+      to right,
+      transparent 78%,
+      var(--color-3) 78%,
+      var(--color-3) 80%,
+      transparent 80%,
+      transparent 82%,
+      var(--color-3) 82%,
+      var(--color-3) 83%,
+      transparent 83%
+    ),
+    linear-gradient(
+      to right,
+      transparent 66%,
+      var(--color-2) 66%,
+      var(--color-4) 85%,
+      transparent 85%
+    );
+  background-size: 300px 150px;
+  background-position: center bottom;
+}
+
+.container::before {
+  content: "";
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  background-color: var(--color-1);
+  background-image: linear-gradient(
+      to top,
+      var(--color-5) 5%,
+      var(--color-1) 6%,
+      var(--color-1) 7%,
+      transparent 7%
+    ),
+    linear-gradient(to bottom, var(--color-1) 30%, transparent 30%),
+    linear-gradient(to right, var(--color-6), var(--color-7) 5%, transparent 5%),
+    linear-gradient(
+      to right,
+      transparent 6%,
+      var(--color-8) 6%,
+      var(--color-9) 9%,
+      transparent 9%
+    ),
+    linear-gradient(
+      to right,
+      transparent 27%,
+      #556b2f 27%,
+      #39481f 34%,
+      transparent 34%
+    ),
+    linear-gradient(
+      to right,
+      transparent 51%,
+      #fa8072 51%,
+      #f85441 57%,
+      transparent 57%
+    ),
+    linear-gradient(to bottom, var(--color-1) 35%, transparent 35%),
+    linear-gradient(
+      to right,
+      transparent 42%,
+      #008080 42%,
+      #004d4d 44%,
+      transparent 44%
+    ),
+    linear-gradient(
+      to right,
+      transparent 45%,
+      #008080 45%,
+      #004d4d 47%,
+      transparent 47%
+    ),
+    linear-gradient(
+      to right,
+      transparent 48%,
+      #008080 48%,
+      #004d4d 50%,
+      transparent 50%
+    ),
+    linear-gradient(
+      to right,
+      transparent 87%,
+      #789 87%,
+      #4f5d6a 91%,
+      transparent 91%
+    ),
+    linear-gradient(to bottom, var(--color-1) 37.5%, transparent 37.5%),
+    linear-gradient(
+      to right,
+      transparent 14%,
+      #bdb76b 14%,
+      #989244 20%,
+      transparent 20%
+    ),
+    linear-gradient(to bottom, var(--color-1) 40%, transparent 40%),
+    linear-gradient(
+      to right,
+      transparent 10%,
+      #808000 10%,
+      #4d4d00 13%,
+      transparent 13%
+    ),
+    linear-gradient(
+      to right,
+      transparent 21%,
+      #8b4513 21%,
+      #5e2f0d 25%,
+      transparent 25%
+    ),
+    linear-gradient(
+      to right,
+      transparent 58%,
+      #8b4513 58%,
+      #5e2f0d 64%,
+      transparent 64%
+    ),
+    linear-gradient(
+      to right,
+      transparent 92%,
+      #2f4f4f 92%,
+      #1c2f2f 95%,
+      transparent 95%
+    ),
+    linear-gradient(to bottom, var(--color-1) 48%, transparent 48%),
+    linear-gradient(
+      to right,
+      transparent 96%,
+      #2f4f4f 96%,
+      #1c2f2f 99%,
+      transparent 99%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 68.5%,
+      transparent 76%,
+      var(--color-1) 76%,
+      var(--color-1) 77.5%,
+      transparent 77.5%,
+      transparent 86%,
+      var(--color-1) 86%,
+      var(--color-1) 87.5%,
+      transparent 87.5%
+    ),
+    linear-gradient(
+      to right,
+      transparent 35%,
+      #cd5c5c 35%,
+      #bc3a3a 41%,
+      transparent 41%
+    ),
+    linear-gradient(to bottom, var(--color-1) 68%, transparent 68%),
+    linear-gradient(
+      to right,
+      transparent 78%,
+      #bc8f8f 78%,
+      #bc8f8f 80%,
+      transparent 80%,
+      transparent 82%,
+      #bc8f8f 82%,
+      #bc8f8f 83%,
+      transparent 83%
+    ),
+    linear-gradient(
+      to right,
+      transparent 66%,
+      #a52a2a 66%,
+      #7c2020 85%,
+      transparent 85%
+    );
+  background-size: 300px 150px;
+  background-position: center bottom;
+  clip-path: circle(150px at center center);
+  animation: flashlight 20s ease infinite;
+}
+
+.container::after {
+  content: "";
+  width: 25px;
+  height: 10px;
+  position: absolute;
+  left: calc(50% + 59px);
+  bottom: 100px;
+  background-repeat: no-repeat;
+  background-image: radial-gradient(circle, #fff 50%, transparent 50%),
+    radial-gradient(circle, #fff 50%, transparent 50%);
+  background-size: 10px 10px;
+  background-position:
+    left center,
+    right center;
+  animation: eyes 20s infinite;
+}
+
+@keyframes flashlight {
+  0% {
+    clip-path: circle(150px at -25% 10%);
+  }
+
+  38% {
+    clip-path: circle(150px at 60% 20%);
+  }
+
+  39% {
+    opacity: 1;
+    clip-path: circle(150px at 60% 86%);
+  }
+
+  40% {
+    opacity: 0;
+    clip-path: circle(150px at 60% 86%);
+  }
+
+  41% {
+    opacity: 1;
+    clip-path: circle(150px at 60% 86%);
+  }
+
+  42% {
+    opacity: 0;
+    clip-path: circle(150px at 60% 86%);
+  }
+
+  54% {
+    opacity: 0;
+    clip-path: circle(150px at 60% 86%);
+  }
+
+  55% {
+    opacity: 1;
+    clip-path: circle(150px at 60% 86%);
+  }
+
+  59% {
+    opacity: 1;
+    clip-path: circle(150px at 60% 86%);
+  }
+
+  64% {
+    clip-path: circle(150px at 45% 78%);
+  }
+
+  68% {
+    clip-path: circle(150px at 85% 89%);
+  }
+
+  72% {
+    clip-path: circle(150px at 60% 86%);
+  }
+
+  74% {
+    clip-path: circle(150px at 60% 86%);
+  }
+
+  100% {
+    clip-path: circle(150px at 150% 50%);
+  }
+}
+
+@keyframes eyes {
+  0%,
+  38% {
+    opacity: 0;
+  }
+
+  39%,
+  41% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+
+  40% {
+    transform: scaleY(0);
+    filter: none;
+    background-image: radial-gradient(circle, #fff 50%, transparent 50%),
+      radial-gradient(circle, #fff 50%, transparent 50%);
+  }
+
+  41% {
+    transform: scaleY(1);
+    background-image: radial-gradient(circle, #ff0000 50%, transparent 50%),
+      radial-gradient(circle, #ff0000 50%, transparent 50%);
+    filter: drop-shadow(0 0 4px #ff8686);
+  }
+
+  42%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.flashlight_text {
+  position: absolute;
+  top: 25%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: 
+    0 0 10px rgba(255, 255, 255, 0.8),
+    0 0 20px rgba(255, 255, 255, 0.6),
+    0 0 30px rgba(255, 255, 255, 0.4),
+    2px 2px 4px rgba(0, 0, 0, 0.8);
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  font-family: 'Montserrat', sans-serif;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  animation: flashlightText 20s ease infinite;
+}
+
+@keyframes flashlightText {
+  0%,
+  38% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+
+  39% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  40% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  41% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  42% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  43%,
+  54% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+
+  55% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  59% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  64% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  68% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  72% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  74% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  75%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+}
+
+.main_wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30em;
+  height: 30em;
+  position: relative;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 5em;
+}
+
+.antenna {
+  width: 5em;
+  height: 5em;
+  border-radius: 50%;
+  border: 2px solid black;
+  background-color: #f27405;
+  margin-bottom: -6em;
+  margin-left: 0em;
+  z-index: -1;
+  position: relative;
+}
+
+.antenna_shadow {
+  position: absolute;
+  background-color: transparent;
+  width: 50px;
+  height: 56px;
+  margin-left: 1.68em;
+  border-radius: 45%;
+  transform: rotate(140deg);
+  border: 4px solid transparent;
+  box-shadow:
+    inset 0px 16px #a85103,
+    inset 0px 16px 1px 1px #a85103;
+  -moz-box-shadow:
+    inset 0px 16px #a85103,
+    inset 0px 16px 1px 1px #a85103;
+}
+
+.antenna::after {
+  content: "";
+  position: absolute;
+  margin-top: -9.4em;
+  margin-left: 0.4em;
+  transform: rotate(-25deg);
+  width: 1em;
+  height: 0.5em;
+  border-radius: 50%;
+  background-color: #f69e50;
+}
+
+.antenna::before {
+  content: "";
+  position: absolute;
+  margin-top: 0.2em;
+  margin-left: 1.25em;
+  transform: rotate(-20deg);
+  width: 1.5em;
+  height: 0.8em;
+  border-radius: 50%;
+  background-color: #f69e50;
+}
+
+.a1 {
+  position: relative;
+  top: -102%;
+  left: -130%;
+  width: 12em;
+  height: 5.5em;
+  border-radius: 50px;
+  background-image: linear-gradient(
+    #ffffff,
+    #ffffff,
+    #f0f0f0,
+    #f0f0f0,
+    #ffffff
+  );
+  transform: rotate(-29deg);
+  clip-path: polygon(50% 0%, 49% 100%, 52% 100%);
+  z-index: 10;
+}
+
+.a1d {
+  position: relative;
+  top: -211%;
+  left: -35%;
+  transform: rotate(45deg);
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  border: 2px solid black;
+  background-color: #ffffff;
+  z-index: 99;
+}
+
+.a2 {
+  position: relative;
+  top: -210%;
+  left: -10%;
+  width: 12em;
+  height: 4em;
+  border-radius: 50px;
+  background-color: #ffffff;
+  background-image: linear-gradient(
+    #ffffff,
+    #ffffff,
+    #f0f0f0,
+    #f0f0f0,
+    #ffffff
+  );
+  margin-right: 5em;
+  clip-path: polygon(
+    47% 0,
+    47% 0,
+    34% 34%,
+    54% 25%,
+    32% 100%,
+    29% 96%,
+    49% 32%,
+    30% 38%
+  );
+  transform: rotate(-8deg);
+  z-index: 10;
+}
+
+.a2d {
+  position: relative;
+  top: -294%;
+  left: 94%;
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  border: 2px solid black;
+  background-color: #ffffff;
+  z-index: 99;
+}
+
+.notfound_text {
+  background-color: black;
+  padding-left: 0.3em;
+  padding-right: 0.3em;
+  font-size: 0.75em;
+  color: white;
+  letter-spacing: 0;
+  border-radius: 5px;
+  z-index: 10;
+}
+
+.tv {
+  width: 17em;
+  height: 9em;
+  margin-top: 3em;
+  border-radius: 15px;
+  background-color: #d36604;
+  display: flex;
+  justify-content: center;
+  border: 2px solid #1d0e01;
+  box-shadow: inset 0.2em 0.2em #e69635;
+  position: relative;
+}
+
+.tv::after {
+  content: "";
+  position: absolute;
+  width: 17em;
+  height: 9em;
+  border-radius: 15px;
+  background:
+    repeating-radial-gradient(#d36604 0 0.0001%, #00000070 0 0.0002%) 50% 0/2500px
+      2500px,
+    repeating-conic-gradient(#d36604 0 0.0001%, #00000070 0 0.0002%) 60% 60%/2500px
+      2500px;
+  background-blend-mode: difference;
+  opacity: 0.09;
+}
+
+.curve_svg {
+  position: absolute;
+  margin-top: 0.25em;
+  margin-left: -0.25em;
+  height: 12px;
+  width: 12px;
+}
+
+.display_div {
+  display: flex;
+  align-items: center;
+  align-self: center;
+  justify-content: center;
+  border-radius: 15px;
+  box-shadow: 3.5px 3.5px 0px #e69635;
+}
+
+.screen_out {
+  width: auto;
+  height: auto;
+  border-radius: 10px;
+}
+
+.screen_out1 {
+  width: 11em;
+  height: 7.75em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+}
+
+.screen {
+  width: 13em;
+  height: 7.85em;
+  font-family: 'Montserrat', sans-serif;
+  border: 2px solid #1d0e01;
+  background:
+    repeating-radial-gradient(#000 0 0.0001%, #ffffff 0 0.0002%) 50% 0/2500px
+      2500px,
+    repeating-conic-gradient(#000 0 0.0001%, #ffffff 0 0.0002%) 60% 60%/2500px
+      2500px;
+  background-blend-mode: difference;
+  animation: b 0.2s infinite alternate;
+  border-radius: 10px;
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #252525;
+  letter-spacing: 0.15em;
+  text-align: center;
+}
+
+.screenM {
+  width: 13em;
+  height: 7.85em;
+  position: relative;
+  font-family: 'Montserrat', sans-serif;
+  background: linear-gradient(
+    to right,
+    #002fc6 0%,
+    #002bb2 14.2857142857%,
+    #3a3a3a 14.2857142857%,
+    #303030 28.5714285714%,
+    #ff0afe 28.5714285714%,
+    #f500f4 42.8571428571%,
+    #6c6c6c 42.8571428571%,
+    #626262 57.1428571429%,
+    #0affd9 57.1428571429%,
+    #00f5ce 71.4285714286%,
+    #3a3a3a 71.4285714286%,
+    #303030 85.7142857143%,
+    white 85.7142857143%,
+    #fafafa 100%
+  );
+  border-radius: 10px;
+  border: 2px solid black;
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #252525;
+  letter-spacing: 0.15em;
+  text-align: center;
+  overflow: hidden;
+}
+
+.screenM::before,
+.screenM::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  z-index: 1;
+  width: 100%;
+}
+
+.screenM::before {
+  top: 0;
+  height: 68.4782608696%;
+  background: linear-gradient(
+    to right,
+    white 0%,
+    #fafafa 14.2857142857%,
+    #ffe60a 14.2857142857%,
+    #f5dc00 28.5714285714%,
+    #0affd9 28.5714285714%,
+    #00f5ce 42.8571428571%,
+    #10ea00 42.8571428571%,
+    #0ed600 57.1428571429%,
+    #ff0afe 57.1428571429%,
+    #f500f4 71.4285714286%,
+    #ed0014 71.4285714286%,
+    #d90012 85.7142857143%,
+    #002fc6 85.7142857143%,
+    #002bb2 100%
+  );
+}
+
+.screenM::after {
+  bottom: 0;
+  height: 21.7391304348%;
+  background: linear-gradient(
+    to right,
+    #006c6b 0%,
+    #005857 16.6666666667%,
+    white 16.6666666667%,
+    #fafafa 33.3333333333%,
+    #001b75 33.3333333333%,
+    #001761 50%,
+    #6c6c6c 50%,
+    #626262 66.6666666667%,
+    #929292 66.6666666667%,
+    #888888 83.3333333333%,
+    #3a3a3a 83.3333333333%,
+    #303030 100%
+  );
+}
+
+@keyframes b {
+  100% {
+    background-position:
+      50% 0,
+      60% 50%;
+  }
+}
+
+.lines {
+  display: flex;
+  column-gap: 0.1em;
+  align-self: flex-end;
+}
+
+.line1,
+.line3 {
+  width: 2px;
+  height: 0.5em;
+  background-color: black;
+  border-radius: 25px 25px 0px 0px;
+  margin-top: 0.5em;
+}
+
+.line2 {
+  flex-grow: 1;
+  width: 2px;
+  height: 1em;
+  background-color: black;
+  border-radius: 25px 25px 0px 0px;
+}
+
+.buttons_div {
+  width: 4.25em;
+  align-self: center;
+  height: 8em;
+  background-color: #e69635;
+  border: 2px solid #1d0e01;
+  padding: 0.6em;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  row-gap: 0.75em;
+  box-shadow: 3px 3px 0px #e69635;
+}
+
+.b1 {
+  width: 1.65em;
+  height: 1.65em;
+  border-radius: 50%;
+  background-color: #7f5934;
+  border: 2px solid black;
+  box-shadow:
+    inset 2px 2px 1px #b49577,
+    -2px 0px #513721,
+    -2px 0px 0px 1px black;
+  position: relative;
+}
+
+.b1::before {
+  content: "";
+  position: absolute;
+  margin-top: 1em;
+  margin-left: 0.5em;
+  transform: rotate(47deg);
+  border-radius: 5px;
+  width: 0.1em;
+  height: 0.4em;
+  background-color: #000000;
+}
+
+.b1::after {
+  content: "";
+  position: absolute;
+  margin-top: 0.9em;
+  margin-left: 0.8em;
+  transform: rotate(47deg);
+  border-radius: 5px;
+  width: 0.1em;
+  height: 0.55em;
+  background-color: #000000;
+}
+
+.b1 div {
+  content: "";
+  position: absolute;
+  margin-top: -0.1em;
+  margin-left: 0.65em;
+  transform: rotate(45deg);
+  width: 0.15em;
+  height: 1.5em;
+  background-color: #000000;
+}
+
+.b2 {
+  width: 1.65em;
+  height: 1.65em;
+  border-radius: 50%;
+  background-color: #7f5934;
+  border: 2px solid black;
+  box-shadow:
+    inset 2px 2px 1px #b49577,
+    -2px 0px #513721,
+    -2px 0px 0px 1px black;
+  position: relative;
+}
+
+.b2::before {
+  content: "";
+  position: absolute;
+  margin-top: 1.05em;
+  margin-left: 0.8em;
+  transform: rotate(-45deg);
+  border-radius: 5px;
+  width: 0.15em;
+  height: 0.4em;
+  background-color: #000000;
+}
+
+.b2::after {
+  content: "";
+  position: absolute;
+  margin-top: -0.1em;
+  margin-left: 0.65em;
+  transform: rotate(-45deg);
+  width: 0.15em;
+  height: 1.5em;
+  background-color: #000000;
+}
+
+.speakers {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.5em;
+}
+
+.speakers .g1 {
+  display: flex;
+  column-gap: 0.25em;
+}
+
+.speakers .g1 .g11,
+.speakers .g1 .g12,
+.speakers .g1 .g13 {
+  width: 0.65em;
+  height: 0.65em;
+  border-radius: 50%;
+  background-color: #7f5934;
+  border: 2px solid black;
+  box-shadow: inset 1.25px 1.25px 1px #b49577;
+}
+
+.speakers .g {
+  width: auto;
+  height: 2px;
+  background-color: #171717;
+}
+
+.bottom {
+  width: 100%;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  column-gap: 8.7em;
+}
+
+.base1 {
+  height: 1em;
+  width: 2em;
+  border: 2px solid #171717;
+  background-color: #4d4d4d;
+  margin-top: -0.15em;
+  z-index: -1;
+}
+
+.base2 {
+  height: 1em;
+  width: 2em;
+  border: 2px solid #171717;
+  background-color: #4d4d4d;
+  margin-top: -0.15em;
+  z-index: -1;
+}
+
+.base3 {
+  position: absolute;
+  height: 0.15em;
+  width: 17.5em;
+  background-color: #171717;
+  margin-top: 0.8em;
+}
+
+.text_404 {
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  column-gap: 6em;
+  z-index: -5;
+  margin-bottom: 2em;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.text_4041 {
+  transform: scaleY(24.5) scaleX(9);
+}
+
+.text_4042 {
+  transform: scaleY(24.5) scaleX(9);
+}
+
+.text_4043 {
+  transform: scaleY(24.5) scaleX(9);
+}
+
+@media only screen and (max-width: 495px) {
+  .text_404 {
+    column-gap: 6em;
+  }
+}
+
+@media only screen and (max-width: 395px) {
+  .text_404 {
+    column-gap: 4em;
+  }
+  .text_4041 {
+    transform: scaleY(25) scaleX(8);
+  }
+  .text_4042 {
+    transform: scaleY(25) scaleX(8);
+  }
+  .text_4043 {
+    transform: scaleY(25) scaleX(8);
+  }
+}
+
+@media (max-width: 275px), (max-height: 520px) {
+  .main {
+    position: relative;
+  }
+}
+
+@media only screen and (max-width: 1024px) {
+  .screenM {
+    display: flex;
+  }
+  .screen {
+    display: none;
+  }
+}
+
+@media only screen and (min-width: 1025px) {
+  .screen {
+    display: flex;
+  }
+  .screenM {
+    display: none;
+  }
+}
+

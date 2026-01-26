@@ -103,6 +103,33 @@ export default function AdminCampaignsPage() {
     setConfirmModalOpen(true);
   };
 
+  const handleDeleteClick = (campaign: Campaign) => {
+    setSelectedCampaign(campaign);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (selectedCampaign && (selectedCampaign._id || selectedCampaign.id)) {
+      try {
+        const id = selectedCampaign._id || selectedCampaign.id;
+        setUpdating(String(id));
+        await api.delete(`/campaigns/${id}`);
+        showToast('Campaign deleted successfully!', 'success');
+        await fetchCampaigns();
+        setSelectedCampaign(null);
+        setDeleteModalOpen(false);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          window.location.href = '/login';
+        } else {
+          showToast('Failed to delete campaign', 'error');
+        }
+      } finally {
+        setUpdating(null);
+      }
+    }
+  };
+
   const handleRejectConfirm = async () => {
     if (selectedCampaign && (selectedCampaign._id || selectedCampaign.id)) {
       try {

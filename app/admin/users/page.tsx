@@ -63,7 +63,7 @@ export default function UsersPage() {
             name: user.name || 'N/A',
             email: user.email || 'N/A',
             role: user.role || 'donor',
-            status: user.isApproved ? (user.isVerified ? 'active' : 'inactive') : 'pending',
+            status: (user.isApproved ? (user.isVerified ? 'active' : 'inactive') : 'pending') as 'active' | 'inactive' | 'pending',
             registeredDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A',
             lastLogin: 'N/A',
             mobileNumber: user.mobileNumber,
@@ -459,7 +459,7 @@ export default function UsersPage() {
                 'GST Number': selectedUser.gstNumber || 'N/A',
                 'Website': selectedUser.website || 'N/A',
               }),
-              'Registered Date': selectedUser.registeredDate || selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleString() : 'N/A',
+              'Registered Date': selectedUser.registeredDate || (selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleString() : 'N/A'),
               'Last Updated': selectedUser.updatedAt ? new Date(selectedUser.updatedAt).toLocaleString() : 'N/A',
               'Last Login': selectedUser.lastLogin || 'N/A',
             }}
@@ -472,13 +472,13 @@ export default function UsersPage() {
             }}
             title="Edit User"
             fields={[
-              { key: 'name', label: 'Name', type: 'text' },
-              { key: 'email', label: 'Email', type: 'email' },
-              { key: 'mobileNumber', label: 'Mobile Number', type: 'text' },
+              { key: 'name', label: 'Name', type: 'text' as const },
+              { key: 'email', label: 'Email', type: 'email' as const },
+              { key: 'mobileNumber', label: 'Mobile Number', type: 'text' as const },
               {
                 key: 'role',
                 label: 'Role',
-                type: 'select',
+                type: 'select' as const,
                 options: [
                   { value: 'donor', label: 'Donor' },
                   { value: 'beneficiary', label: 'Beneficiary' },
@@ -489,16 +489,16 @@ export default function UsersPage() {
                   { value: 'staff', label: 'Staff' },
                 ],
               },
-              { key: 'address', label: 'Address', type: 'textarea' },
-              { key: 'city', label: 'City', type: 'text' },
-              { key: 'state', label: 'State', type: 'text' },
-              { key: 'pincode', label: 'Pincode', type: 'text' },
+              { key: 'address', label: 'Address', type: 'textarea' as const },
+              { key: 'city', label: 'City', type: 'text' as const },
+              { key: 'state', label: 'State', type: 'text' as const },
+              { key: 'pincode', label: 'Pincode', type: 'text' as const },
               ...(selectedUser?.role === 'partner' ? [
-                { key: 'businessName', label: 'Business Name', type: 'text' },
+                { key: 'businessName', label: 'Business Name', type: 'text' as const },
                 {
                   key: 'businessType',
                   label: 'Business Type',
-                  type: 'select',
+                  type: 'select' as const,
                   options: [
                     { value: 'health', label: 'Health' },
                     { value: 'food', label: 'Food' },
@@ -507,13 +507,13 @@ export default function UsersPage() {
                     { value: 'other', label: 'Other' },
                   ],
                 },
-                { key: 'gstNumber', label: 'GST Number', type: 'text' },
-                { key: 'website', label: 'Website', type: 'text' },
+                { key: 'gstNumber', label: 'GST Number', type: 'text' as const },
+                { key: 'website', label: 'Website', type: 'text' as const },
               ] : []),
               {
                 key: 'isApproved',
                 label: 'Approved',
-                type: 'select',
+                type: 'select' as const,
                 options: [
                   { value: 'true', label: 'Yes' },
                   { value: 'false', label: 'No' },
@@ -522,7 +522,7 @@ export default function UsersPage() {
               {
                 key: 'isVerified',
                 label: 'Verified',
-                type: 'select',
+                type: 'select' as const,
                 options: [
                   { value: 'true', label: 'Yes' },
                   { value: 'false', label: 'No' },
@@ -531,7 +531,7 @@ export default function UsersPage() {
               {
                 key: 'isActive',
                 label: 'Active',
-                type: 'select',
+                type: 'select' as const,
                 options: [
                   { value: 'true', label: 'Yes' },
                   { value: 'false', label: 'No' },

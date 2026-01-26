@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, MapPin, Phone, Mail, Clock, Map, UtensilsCrossed, MessageCircle, Heart, Loader2, Ticket, X, QrCode, Copy, CheckCircle, FileText } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, Mail, Clock, Map, Building2, Heart, Loader2, Ticket, X, QrCode, Copy, CheckCircle } from 'lucide-react';
 import Footer from '@/components/layout/Footer';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { api, ApiError } from '@/lib/api';
 import { showToast } from '@/lib/toast';
 
-export default function FoodPartnerDetailPage() {
+export default function HospitalPartnerDetailPage() {
   const params = useParams();
   const router = useRouter();
   const partnerId = params?.id as string;
@@ -34,13 +34,12 @@ export default function FoodPartnerDetailPage() {
       setLoading(true);
       const data = await api.get<any>(`/partners/${partnerId}`);
       if (data) {
-        // Extract image from formData if photo/logo are not available
         let photo = data.photo || data.logo;
         if (!photo && data.formData) {
           if (data.formData.banner) {
             photo = data.formData.banner;
-          } else if (data.formData.restaurantImages && Array.isArray(data.formData.restaurantImages) && data.formData.restaurantImages.length > 0) {
-            photo = data.formData.restaurantImages[0];
+          } else if (data.formData.hospitalImages && Array.isArray(data.formData.hospitalImages) && data.formData.hospitalImages.length > 0) {
+            photo = data.formData.hospitalImages[0];
           }
         }
         setPartner({
@@ -64,21 +63,19 @@ export default function FoodPartnerDetailPage() {
     try {
       setGeneratingCoupon(true);
       
-      // Check if user is logged in
       const token = localStorage.getItem('userToken');
       if (!token || token.trim() === '') {
         showToast('Please login to get a coupon', 'info');
-        localStorage.setItem('redirectAfterLogin', `/partners/food/${partnerId}`);
+        localStorage.setItem('redirectAfterLogin', `/partners/hospital/${partnerId}`);
         router.push('/login');
         return;
       }
 
-      // Generate coupon for food partner
       const response = await api.post<any>('/coupons', {
-        amount: 0, // Free coupon for food partner
-        paymentId: `food-partner-${partnerId}-${Date.now()}`,
+        amount: 0,
+        paymentId: `hospital-partner-${partnerId}-${Date.now()}`,
         paymentStatus: 'completed',
-        beneficiaryName: partner?.name || partner?.businessName || 'Food Partner',
+        beneficiaryName: partner?.name || partner?.businessName || 'Hospital Partner',
         partnerId: partnerId,
       });
 
@@ -92,7 +89,7 @@ export default function FoodPartnerDetailPage() {
       if (error instanceof ApiError) {
         if (error.status === 401) {
           showToast('Please login to get a coupon', 'error');
-          localStorage.setItem('redirectAfterLogin', `/partners/food/${partnerId}`);
+          localStorage.setItem('redirectAfterLogin', `/partners/hospital/${partnerId}`);
           router.push('/login');
         } else {
           showToast(`Failed to generate coupon: ${error.message}`, 'error');
@@ -128,37 +125,33 @@ export default function FoodPartnerDetailPage() {
       <div className="min-h-screen bg-gray-50 pt-16 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Partner Not Found</h1>
-          <Button onClick={() => router.push('/partners/food')}>
+          <Button onClick={() => router.push('/partners/hospital')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Food Partners
+            Back to Hospital Partners
           </Button>
         </div>
       </div>
     );
   }
 
-
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
       <div className="w-full px-4 sm:px-6 lg:px-8">
-        {/* Back Button */}
         <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <button
-            onClick={() => router.push('/partners/food')}
+            onClick={() => router.push('/partners/hospital')}
             className="inline-flex items-center text-gray-600 hover:text-[#10b981] transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Food Partners
+            Back to Hospital Partners
           </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-[5px]">
-          {/* Main Content */}
           <div className="lg:col-span-7">
-            {/* Partner Image */}
             <div className="relative h-64 sm:h-80 lg:h-96 w-full overflow-hidden bg-gray-200">
               <Image
-                src={partner.photo || partner.logo || 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800&h=600&fit=crop'}
+                src={partner.photo || partner.logo || 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&h=600&fit=crop'}
                 alt={partner.name || partner.businessName || 'Partner'}
                 fill
                 className="object-cover"
@@ -167,7 +160,7 @@ export default function FoodPartnerDetailPage() {
               <div className="absolute top-3 sm:top-4 left-3 sm:left-4">
                 <div className="bg-white/90 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg shadow-md">
                   <Image
-                    src={partner.logo || 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&h=400&fit=crop'}
+                    src={partner.logo || 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&h=400&fit=crop'}
                     alt={`${partner.name || partner.businessName || 'Partner'} logo`}
                     width={120}
                     height={40}
@@ -178,13 +171,12 @@ export default function FoodPartnerDetailPage() {
               </div>
             </div>
 
-            {/* Partner Info */}
             <Card className="rounded-none border-0 shadow-none p-6 sm:p-8 lg:p-10 bg-white">
               <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">{partner.name || partner.businessName}</h1>
               <p className="text-gray-600 text-lg sm:text-xl mb-8 leading-relaxed">{partner.description || partner.about}</p>
 
               <div className="mb-8">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Programs</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Services</h2>
                 <div className="flex flex-wrap gap-3 sm:gap-4">
                   {(partner.programs || []).map((program: string, index: number) => (
                     <span
@@ -214,65 +206,21 @@ export default function FoodPartnerDetailPage() {
                 </div>
               </div>
             </Card>
-
-            {/* CFT Menu Section */}
-            {partner.formData?.cftMenu && Array.isArray(partner.formData.cftMenu) && partner.formData.cftMenu.length > 0 && (
-              <Card className="rounded-none border-0 shadow-none p-6 sm:p-8 lg:p-10 bg-white mt-6">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <UtensilsCrossed className="h-5 w-5 sm:h-6 sm:w-6 text-[#10b981]" />
-                  CFT Menu
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {partner.formData.cftMenu.map((menu: string, index: number) => (
-                    <div key={index} className="border-2 border-gray-200 rounded-lg overflow-hidden hover:border-[#10b981] transition-all">
-                      {menu.toLowerCase().endsWith('.pdf') ? (
-                        <a
-                          href={menu}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
-                        >
-                          <div className="flex items-center justify-center gap-2">
-                            <FileText className="h-8 w-8 text-[#10b981]" />
-                            <span className="text-sm font-semibold text-gray-700">Menu {index + 1} (PDF)</span>
-                          </div>
-                        </a>
-                      ) : (
-                        <div className="relative w-full aspect-video bg-gray-100">
-                          <Image
-                            src={menu}
-                            alt={`CFT Menu ${index + 1}`}
-                            fill
-                            className="object-cover cursor-pointer"
-                            onClick={() => window.open(menu, '_blank')}
-                            unoptimized
-                          />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
           </div>
 
-          {/* Sidebar - Contact Information & Donation */}
           <div className="lg:col-span-5">
             <Card className="rounded-none shadow-none p-5 sm:p-6 lg:p-8 lg:sticky lg:top-20 h-full lg:min-h-screen bg-gray-50">
-              {/* Contact Information */}
               <div className="mb-6 sm:mb-8">
                 <div className="flex items-center gap-3 mb-5 sm:mb-6 pb-4 sm:pb-5 border-b-2 border-gray-300">
                   <div className="bg-[#10b981] p-2 rounded-lg">
-                    <UtensilsCrossed className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                    <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Contact Information</h2>
                 </div>
 
                 <div className="space-y-3 sm:space-y-4">
-                  {/* Phone and Email - Side by Side */}
                   <div className="pb-2 sm:pb-3 border-b border-gray-100">
                     <div className="grid grid-cols-2 gap-4">
-                      {/* Phone - Left Side */}
                       <div>
                         <div className="text-xs font-semibold text-gray-500 mb-1.5 sm:mb-2 uppercase tracking-wide">Phone</div>
                         <div className="flex items-center gap-2 sm:gap-2.5 text-sm text-gray-700">
@@ -282,7 +230,6 @@ export default function FoodPartnerDetailPage() {
                           </a>
                         </div>
                       </div>
-                      {/* Email - Right Side */}
                       <div>
                         <div className="text-xs font-semibold text-gray-500 mb-1.5 sm:mb-2 uppercase tracking-wide">Email</div>
                         <div className="flex items-center gap-2 sm:gap-2.5 text-sm text-gray-700">
@@ -312,20 +259,9 @@ export default function FoodPartnerDetailPage() {
                       </div>
                     </div>
                   )}
-
-                  {(partner.formData?.foundationFees || partner.foundationFees) && (
-                    <div className="pb-2 sm:pb-3 border-b border-gray-100">
-                      <div className="text-xs font-semibold text-gray-500 mb-1.5 sm:mb-2 uppercase tracking-wide">NGO Fees</div>
-                      <div className="flex items-center gap-2 sm:gap-2.5 text-sm text-gray-700">
-                        <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#10b981] flex-shrink-0" />
-                        <span className="font-medium">₹{partner.formData?.foundationFees || partner.foundationFees}</span>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
 
-              {/* Donation Section */}
               <div className="pt-6 sm:pt-8 border-t-2 border-gray-300">
                 <div className="flex items-center gap-3 mb-5 sm:mb-6">
                   <div className="bg-[#10b981] p-2 rounded-lg">
@@ -334,7 +270,6 @@ export default function FoodPartnerDetailPage() {
                   <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Donate Now</h3>
                 </div>
 
-                {/* Preset Amounts */}
                 <div className="mb-4 sm:mb-5">
                   <div className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">Choose Amount</div>
                   <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
@@ -357,7 +292,6 @@ export default function FoodPartnerDetailPage() {
                   </div>
                 </div>
 
-                {/* Custom Amount */}
                 <div className="mb-4 sm:mb-5">
                   <div className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-2.5">Or Enter Custom Amount</div>
                   <div className="relative">
@@ -376,7 +310,6 @@ export default function FoodPartnerDetailPage() {
                   </div>
                 </div>
 
-                {/* Donate Button */}
                 <Button
                   className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-bold text-sm sm:text-base py-3 sm:py-3.5 shadow-lg hover:shadow-xl transition-all duration-200 mb-3 sm:mb-4"
                   onClick={() => {
@@ -386,7 +319,6 @@ export default function FoodPartnerDetailPage() {
                       return;
                     }
                     
-                    // Store donation data
                     const donationData = {
                       amount: amount,
                       campaignId: null,
@@ -406,7 +338,6 @@ export default function FoodPartnerDetailPage() {
                   Donate ₹{customAmount || selectedAmount || '0'}
                 </Button>
 
-                {/* Action Buttons */}
                 <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
                   <Button 
                     variant="outline" 
@@ -428,7 +359,6 @@ export default function FoodPartnerDetailPage() {
                     className="w-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold text-xs sm:text-sm py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-200 shadow-md hover:shadow-lg"
                     onClick={() => {
                       let phoneNumber = (partner.phone || partner.mobileNumber || partner.contact || '').replace(/[\s\-+()]/g, '');
-                      // Ensure country code is present (add 91 for India if not present)
                       if (phoneNumber && !phoneNumber.startsWith('91') && phoneNumber.length === 10) {
                         phoneNumber = '91' + phoneNumber;
                       }
@@ -449,7 +379,6 @@ export default function FoodPartnerDetailPage() {
         </div>
       </div>
       
-      {/* Coupon Modal */}
       {showCouponModal && generatedCoupon && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 relative">

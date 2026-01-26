@@ -61,6 +61,33 @@ export default function ProductsPage() {
     }
   };
 
+  const handleDeleteClick = (product: Product) => {
+    setSelectedProduct(product);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (selectedProduct && (selectedProduct._id || selectedProduct.id)) {
+      try {
+        const id = selectedProduct._id || selectedProduct.id;
+        setUpdating(String(id));
+        await api.delete(`/products/${id}`);
+        showToast('Product deleted successfully!', 'success');
+        await fetchProducts();
+        setSelectedProduct(null);
+        setDeleteModalOpen(false);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          window.location.href = '/login';
+        } else {
+          showToast('Failed to delete product', 'error');
+        }
+      } finally {
+        setUpdating(null);
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-6 lg:p-8 flex items-center justify-center min-h-[400px]">

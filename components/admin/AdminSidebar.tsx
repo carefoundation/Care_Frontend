@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   Users,
   Target,
-  DollarSign,
   Settings,
   FileText,
   BarChart3,
@@ -47,12 +46,13 @@ const getMainSection = (userRole: string) => {
 
 // Backend Content Section
 const donationSection = [
-  { href: '/admin/donations', label: 'Donation Data', icon: DollarSign },
+  { href: '/admin/donations', label: 'Donation Data', icon: Wallet },
 ];
 
 const couponSection = [
   { href: '/admin/coupons', label: 'Coupon Data', icon: Ticket },
   { href: '/admin/coupon-claims', label: 'Coupon Claims', icon: Ticket },
+  { href: '/admin/redemption-requests', label: 'Redemption Requests', icon: ClipboardList },
   { href: '/admin/wallets', label: 'Vendor Wallets', icon: Wallet },
 ];
 

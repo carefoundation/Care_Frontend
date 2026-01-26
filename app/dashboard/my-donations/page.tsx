@@ -149,11 +149,11 @@ export default function MyDonationsPage() {
                   <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      {new Date(donation.date).toLocaleDateString('en-IN', {
+                      {donation.date && donation.date !== 'N/A' ? new Date(donation.date).toLocaleDateString('en-IN', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
-                      })}
+                      }) : 'N/A'}
                     </div>
                     <div className="flex items-center gap-2">
                       <span>Payment:</span>

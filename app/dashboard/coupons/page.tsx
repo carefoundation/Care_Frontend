@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Ticket, Plus, Search, Filter, Copy, CheckCircle2, XCircle, Clock, Loader2 } from 'lucide-react';
+import { Ticket, Plus, Search, Filter, Copy, CheckCircle2, XCircle, Clock, Loader2, QrCode, Eye, Building2 } from 'lucide-react';
 import { api, ApiError } from '@/lib/api';
 
 interface Coupon {
@@ -13,10 +13,13 @@ interface Coupon {
   value: number;
   discountValue?: number;
   type: 'percentage' | 'fixed';
-  status: 'active' | 'redeemed' | 'expired';
+  status: 'active' | 'redeemed' | 'expired' | 'used';
   issuedTo?: string;
   issuedDate: string;
   expiryDate: string;
+  qrCode?: string;
+  partnerName?: string;
+  partnerType?: string;
 }
 
 export default function MyCouponsPage() {
@@ -25,6 +28,8 @@ export default function MyCouponsPage() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
 
   useEffect(() => {
     fetchMyCoupons();
@@ -33,10 +38,47 @@ export default function MyCouponsPage() {
   const fetchMyCoupons = async () => {
     try {
       setLoading(true);
-      const data = await api.get<any[]>('/coupons');
-      if (Array.isArray(data)) {
-        const now = new Date();
-        const formatted = data.map((coupon: any) => {
+      // Fetch donation coupons (created after partner payments)
+      const donationCouponsRes = await api.get<any>('/donation-coupons/my-coupons');
+      const donationCoupons = Array.isArray(donationCouponsRes) ? donationCouponsRes : (donationCouponsRes?.data || []);
+      
+      // Also fetch regular coupons (if any)
+      let regularCoupons: any[] = [];
+      try {
+        const regularRes = await api.get<any[]>('/coupons');
+        regularCoupons = Array.isArray(regularRes) ? regularRes : [];
+      } catch (error) {
+        // Ignore errors for regular coupons
+      }
+
+      const now = new Date();
+      const formatted = [
+        ...donationCoupons.map((coupon: any) => {
+          const expiryDate = coupon.expiryDate ? new Date(coupon.expiryDate) : null;
+          let status: 'active' | 'used' | 'expired' = 'active';
+          if (coupon.status === 'used') {
+            status = 'used';
+          } else if (expiryDate && expiryDate < now) {
+            status = 'expired';
+          }
+          
+          return {
+            id: coupon._id || coupon.id,
+            _id: coupon._id,
+            code: coupon.couponCode || 'N/A',
+            value: coupon.amount || 0,
+            discountValue: coupon.amount,
+            type: 'fixed' as const,
+            status: status === 'used' ? 'redeemed' : status,
+            issuedTo: coupon.partnerId?.name || 'Partner',
+            issuedDate: coupon.createdAt ? new Date(coupon.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            expiryDate: coupon.expiryDate ? new Date(coupon.expiryDate).toISOString().split('T')[0] : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            qrCode: coupon.qrCode,
+            partnerName: coupon.partnerId?.name,
+            partnerType: coupon.partnerId?.type,
+          };
+        }),
+        ...regularCoupons.map((coupon: any) => {
           const expiryDate = coupon.expiryDate ? new Date(coupon.expiryDate) : null;
           let status: 'active' | 'redeemed' | 'expired' = 'active';
           if (coupon.status === 'redeemed' || coupon.isRedeemed) {
@@ -57,11 +99,9 @@ export default function MyCouponsPage() {
             issuedDate: coupon.createdAt ? new Date(coupon.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
             expiryDate: coupon.expiryDate ? new Date(coupon.expiryDate).toISOString().split('T')[0] : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           };
-        });
-        setCoupons(formatted);
-      } else {
-        setCoupons([]);
-      }
+        }),
+      ];
+      setCoupons(formatted);
     } catch (error) {
       if (error instanceof ApiError) {
         console.error('Failed to fetch coupons:', error.message);
@@ -242,16 +282,132 @@ export default function MyCouponsPage() {
                     </span>
                   </div>
                 </div>
-                {coupon.status === 'active' && (
-                  <Button className="w-full" variant="outline">
-                    View Details
-                  </Button>
-                )}
+                <Button 
+                  className="w-full" 
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedCoupon(coupon);
+                    setViewModalOpen(true);
+                  }}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Details
+                </Button>
               </div>
             </Card>
           ))
         )}
       </div>
+
+      {/* View Coupon Modal */}
+      {viewModalOpen && selectedCoupon && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-[9998]" onClick={() => {
+            setViewModalOpen(false);
+            setSelectedCoupon(null);
+          }} />
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <Card className="max-w-md w-full">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-gray-900">Coupon Details</h2>
+                  <button
+                    onClick={() => {
+                      setViewModalOpen(false);
+                      setSelectedCoupon(null);
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <XCircle className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Coupon Code</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xl font-bold font-mono text-[#10b981]">{selectedCoupon.code}</p>
+                      <button
+                        onClick={() => handleCopyCode(selectedCoupon.code)}
+                        className="p-1 hover:bg-gray-100 rounded transition-colors"
+                        title="Copy code"
+                      >
+                        {copiedCode === selectedCoupon.code ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <Copy className="h-4 w-4 text-gray-400" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {selectedCoupon.qrCode && (
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">QR Code</p>
+                      <div className="bg-gray-50 p-4 rounded-lg flex justify-center">
+                        <img 
+                          src={selectedCoupon.qrCode} 
+                          alt="Coupon QR Code" 
+                          className="max-w-full h-auto max-h-64"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Amount</p>
+                      <p className="font-semibold text-gray-900">
+                        ₹{selectedCoupon.value.toFixed(2)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Status</p>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        selectedCoupon.status === 'active'
+                          ? 'bg-green-100 text-green-700'
+                          : selectedCoupon.status === 'redeemed' || selectedCoupon.status === 'used'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {selectedCoupon.status === 'used' ? 'USED' : selectedCoupon.status.toUpperCase()}
+                      </span>
+                    </div>
+                    {selectedCoupon.partnerName && (
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Partner</p>
+                        <p className="font-semibold text-gray-900 capitalize">{selectedCoupon.partnerName}</p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Expires</p>
+                      <p className="font-semibold text-gray-900">
+                        {new Date(selectedCoupon.expiryDate).toLocaleDateString('en-IN', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      setViewModalOpen(false);
+                      setSelectedCoupon(null);
+                    }}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </>
+      )}
     </div>
   );
 }

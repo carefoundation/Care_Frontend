@@ -69,19 +69,30 @@ export default function QueriesPage() {
           return dateB - dateA;
         });
         
-        const formatted = allSubmissions.map((q: any) => ({
-          id: q._id || q.id,
-          _id: q._id,
-          name: q.name || 'Anonymous',
-          email: q.email || 'N/A',
-          subject: q.subject || 'No Subject',
-          message: q.message || 'No message',
-          status: q.status === 'new' ? 'new' : q.status === 'replied' ? 'replied' : q.status === 'resolved' ? 'resolved' : 'new',
-          date: q.createdAt ? new Date(q.createdAt).toLocaleDateString() : 'N/A',
-          phone: q.phone,
-          replyMessage: q.replyMessage,
-          formType: q.formType || 'contact',
-        }));
+        const formatted = allSubmissions.map((q: any) => {
+          let status: 'new' | 'replied' | 'resolved' = 'new';
+          if (q.status === 'replied') {
+            status = 'replied';
+          } else if (q.status === 'resolved') {
+            status = 'resolved';
+          } else {
+            status = 'new';
+          }
+          
+          return {
+            id: q._id || q.id,
+            _id: q._id,
+            name: q.name || 'Anonymous',
+            email: q.email || 'N/A',
+            subject: q.subject || 'No Subject',
+            message: q.message || 'No message',
+            status: status,
+            date: q.createdAt ? new Date(q.createdAt).toLocaleDateString() : 'N/A',
+            phone: q.phone,
+            replyMessage: q.replyMessage,
+            formType: q.formType || 'contact',
+          };
+        });
         setQueries(formatted);
       } else {
         setQueries([]);

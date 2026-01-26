@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, X, CheckCircle, Heart, DollarSign, Users, AlertCircle } from 'lucide-react';
+import { Bell, X, CheckCircle, Heart, Wallet, Users, AlertCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface Notification {
@@ -86,7 +86,7 @@ export default function NotificationBell() {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'donation':
-        return <DollarSign className="h-5 w-5 text-[#10b981]" />;
+        return <Wallet className="h-5 w-5 text-[#10b981]" />;
       case 'campaign':
         return <Heart className="h-5 w-5 text-red-500" />;
       case 'update':

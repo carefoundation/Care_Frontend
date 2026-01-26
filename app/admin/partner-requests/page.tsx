@@ -27,6 +27,10 @@ interface PartnerRequest {
   city?: string;
   state?: string;
   pincode?: string;
+  formData?: Record<string, any>;
+  logo?: string;
+  photo?: string;
+  [key: string]: any; // Allow additional properties
 }
 
 export default function PartnerRequestsPage() {

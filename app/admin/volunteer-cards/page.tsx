@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, ReactNode } from 'react';
 import DataTable from '@/components/admin/DataTable';
 import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -13,6 +13,7 @@ import jsPDF from 'jspdf';
 
 interface Volunteer {
   _id: string;
+  id?: string;
   name: string;
   email: string;
   phone: string;
@@ -46,7 +47,7 @@ export default function VolunteerCardsPage() {
       setLoading(true);
       const data = await api.get<Volunteer[]>('/volunteers?status=approved');
       if (Array.isArray(data)) {
-        setVolunteers(data);
+        setVolunteers(data.map(volunteer => ({ ...volunteer, id: volunteer._id })));
       }
     } catch (error) {
       console.error('Failed to fetch volunteers:', error);
@@ -149,7 +150,7 @@ export default function VolunteerCardsPage() {
     {
       header: 'Status',
       accessor: 'status' as keyof Volunteer,
-      render: (value: string) => (
+      render: (value: any, row: Volunteer) => (
         <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
           {value}
         </span>

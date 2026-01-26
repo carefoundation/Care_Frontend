@@ -4,10 +4,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { Heart, Menu, X, User, LogIn, LogOut, ChevronDown, Info, Target, Users, Award, FileText, TrendingUp, PlusCircle, FolderOpen, UtensilsCrossed, Stethoscope, Handshake, UserPlus, Calendar, LayoutDashboard, Star, BookOpen } from 'lucide-react';
+import { Heart, Menu, X, User, LogIn, LogOut, ChevronDown, Info, Target, Users, Award, FileText, TrendingUp, PlusCircle, FolderOpen, UtensilsCrossed, Stethoscope, Handshake, UserPlus, Calendar, LayoutDashboard, Star, BookOpen, Building2, Pill, Microscope } from 'lucide-react';
 import AnimatedHamburger from '../ui/AnimatedHamburger';
 import Button from '../ui/Button';
 import { checkAdminSession, clearAdminSession } from '@/lib/auth';
+import { showToast } from '@/lib/toast';
 
 export default function Header() {
   const pathname = usePathname();
@@ -127,6 +128,11 @@ export default function Header() {
     setOpenDropdown(null);
   };
 
+  const handleMobileLinkClick = (href: string) => {
+    closeMenu();
+    router.push(href);
+  };
+
   const toggleDropdown = (dropdown: string) => {
     setOpenDropdown(openDropdown === dropdown ? null : dropdown);
   };
@@ -140,6 +146,9 @@ export default function Header() {
   const campaignsDropdownItems = [
     { href: '/partners/food', label: 'Food Partners', icon: UtensilsCrossed },
     { href: '/partners/health', label: 'Health Partners', icon: Stethoscope },
+    { href: '/partners/hospital', label: 'Hospital', icon: Building2 },
+    { href: '/partners/medicine', label: 'Medicine/Pharmacy', icon: Pill },
+    { href: '/partners/pathology', label: 'Pathology Lab', icon: Microscope },
   ];
 
   const joinUsDropdownItems = [
@@ -150,7 +159,7 @@ export default function Header() {
 
   const moreDropdownItems = [
     { href: '/events', label: 'Events', icon: Calendar },
-    { href: '/celebrities', label: 'Celebrities', icon: Star },
+    { href: '/celebrities', label: 'Social Celebrities', icon: Star },
     { href: '/blogs', label: 'Blogs', icon: BookOpen },
     { href: '/founder', label: 'Founder', icon: User },
   ];
@@ -276,17 +285,42 @@ export default function Header() {
               </button>
               {openDropdown === 'joinUs' && (
                 <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 transform transition-all duration-200 ease-out opacity-100 translate-y-0">
-                  {joinUsDropdownItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setOpenDropdown(null)}
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-[#ecfdf5] hover:text-[#10b981] transition-colors"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </Link>
-                  ))}
+                  {joinUsDropdownItems.map((item) => {
+                    if (item.href === '/volunteer') {
+                      return (
+                        <button
+                          key={item.href}
+                          onClick={() => {
+                            setOpenDropdown(null);
+                            if (!isLoggedIn) {
+                              if (typeof window !== 'undefined') {
+                                localStorage.setItem('redirectAfterLogin', '/volunteer');
+                              }
+                              showToast('Please login to become a volunteer', 'info');
+                              router.push('/login');
+                            } else {
+                              router.push('/volunteer');
+                            }
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-[#ecfdf5] hover:text-[#10b981] transition-colors text-left"
+                        >
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    }
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setOpenDropdown(null)}
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-[#ecfdf5] hover:text-[#10b981] transition-colors"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -394,13 +428,12 @@ export default function Header() {
           }`}
         >
           <div className="py-4 space-y-2 border-t border-gray-200">
-            <Link
-              href="/"
-              onClick={closeMenu}
-              className="block px-4 py-3 text-gray-700 hover:bg-[#ecfdf5] hover:text-[#10b981] rounded-lg transition-colors font-medium"
+            <button
+              onClick={() => handleMobileLinkClick('/')}
+              className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-[#ecfdf5] hover:text-[#10b981] rounded-lg transition-colors font-medium"
             >
               Home
-            </Link>
+            </button>
 
             {/* Mobile Crowd Funding Dropdown */}
             <div>
@@ -419,15 +452,14 @@ export default function Header() {
               {openDropdown === 'about-mobile' && (
                 <div className="pl-4 mt-1 space-y-1">
                   {aboutDropdownItems.map((item) => (
-                    <Link
+                    <button
                       key={item.href}
-                      href={item.href}
-                      onClick={closeMenu}
-                      className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-[#ecfdf5] hover:text-[#10b981] rounded-lg transition-colors text-sm"
+                      onClick={() => handleMobileLinkClick(item.href)}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-[#ecfdf5] hover:text-[#10b981] rounded-lg transition-colors text-sm text-left"
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.label}</span>
-                    </Link>
+                    </button>
                   ))}
                 </div>
               )}
@@ -450,15 +482,14 @@ export default function Header() {
               {openDropdown === 'campaigns-mobile' && (
                 <div className="pl-4 mt-1 space-y-1">
                   {campaignsDropdownItems.map((item) => (
-                    <Link
+                    <button
                       key={item.href}
-                      href={item.href}
-                      onClick={closeMenu}
-                      className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-[#ecfdf5] hover:text-[#10b981] rounded-lg transition-colors text-sm"
+                      onClick={() => handleMobileLinkClick(item.href)}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-[#ecfdf5] hover:text-[#10b981] rounded-lg transition-colors text-sm text-left"
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.label}</span>
-                    </Link>
+                    </button>
                   ))}
                 </div>
               )}
@@ -480,17 +511,41 @@ export default function Header() {
               </button>
               {openDropdown === 'joinUs-mobile' && (
                 <div className="pl-4 mt-1 space-y-1">
-                  {joinUsDropdownItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={closeMenu}
-                      className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-[#ecfdf5] hover:text-[#10b981] rounded-lg transition-colors text-sm"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </Link>
-                  ))}
+                  {joinUsDropdownItems.map((item) => {
+                    if (item.href === '/volunteer') {
+                      return (
+                        <button
+                          key={item.href}
+                          onClick={() => {
+                            closeMenu();
+                            if (!isLoggedIn) {
+                              if (typeof window !== 'undefined') {
+                                localStorage.setItem('redirectAfterLogin', '/volunteer');
+                              }
+                              showToast('Please login to become a volunteer', 'info');
+                              router.push('/login');
+                            } else {
+                              router.push('/volunteer');
+                            }
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-[#ecfdf5] hover:text-[#10b981] rounded-lg transition-colors text-sm text-left"
+                        >
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    }
+                    return (
+                      <button
+                        key={item.href}
+                        onClick={() => handleMobileLinkClick(item.href)}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-[#ecfdf5] hover:text-[#10b981] rounded-lg transition-colors text-sm text-left"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -512,40 +567,40 @@ export default function Header() {
               {openDropdown === 'more-mobile' && (
                 <div className="pl-4 mt-1 space-y-1">
                   {moreDropdownItems.map((item) => (
-                    <Link
+                    <button
                       key={item.href}
-                      href={item.href}
-                      onClick={closeMenu}
-                      className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-[#ecfdf5] hover:text-[#10b981] rounded-lg transition-colors text-sm"
+                      onClick={() => handleMobileLinkClick(item.href)}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-[#ecfdf5] hover:text-[#10b981] rounded-lg transition-colors text-sm text-left"
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.label}</span>
-                    </Link>
+                    </button>
                   ))}
                 </div>
               )}
             </div>
 
             {/* Other Mobile Links */}
-            {navLinks.map((link) => (
-              <Link
+            {navLinks.filter(link => link.href !== '/').map((link) => (
+              <button
                 key={link.href}
-                href={link.href}
-                onClick={closeMenu}
-                className="block px-4 py-3 text-gray-700 hover:bg-[#ecfdf5] hover:text-[#10b981] rounded-lg transition-colors font-medium"
+                onClick={() => handleMobileLinkClick(link.href)}
+                className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-[#ecfdf5] hover:text-[#10b981] rounded-lg transition-colors font-medium"
               >
                 {link.label}
-              </Link>
+              </button>
             ))}
             <div className="pt-4 border-t border-gray-200 space-y-2 px-4">
               {isLoggedIn ? (
                 <>
-                  <Link href={isAdmin ? '/admin' : '/dashboard'} onClick={closeMenu}>
-                    <Button variant="ghost" className="w-full justify-center">
-                      <LayoutDashboard className="h-4 w-4 mr-2" />
-                      Dashboard
-                    </Button>
-                  </Link>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-center" 
+                    onClick={() => handleMobileLinkClick(isAdmin ? '/admin' : '/dashboard')}
+                  >
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </Button>
                   <Button variant="ghost" className="w-full justify-center" onClick={() => { handleLogout(); closeMenu(); }}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
@@ -553,18 +608,21 @@ export default function Header() {
                 </>
               ) : pathname?.startsWith('/admin') ? null : (
                 <>
-                  <Link href="/login" onClick={closeMenu}>
-                    <Button variant="ghost" className="w-full justify-center">
-                      <LogIn className="h-4 w-4 mr-2" />
-                      Login
-                    </Button>
-                  </Link>
-                  <Link href="/register" onClick={closeMenu}>
-                    <Button className="w-full justify-center">
-                      <User className="h-4 w-4 mr-2" />
-                      Register
-                    </Button>
-                  </Link>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-center"
+                    onClick={() => handleMobileLinkClick('/login')}
+                  >
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Login
+                  </Button>
+                  <Button 
+                    className="w-full justify-center"
+                    onClick={() => handleMobileLinkClick('/register')}
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Register
+                  </Button>
                 </>
               )}
             </div>

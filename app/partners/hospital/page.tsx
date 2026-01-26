@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { UtensilsCrossed, Heart, Users, Award, Map, MessageCircle, Loader2, Ticket, X, QrCode, Copy, CheckCircle } from 'lucide-react';
+import { Building2, Heart, Users, Award, Map, Loader2, Ticket, X, QrCode, Copy, CheckCircle } from 'lucide-react';
 import Footer from '@/components/layout/Footer';
 import Card from '@/components/ui/Card';
 import Link from 'next/link';
@@ -11,11 +11,11 @@ import Button from '@/components/ui/Button';
 import { api, ApiError } from '@/lib/api';
 import { showToast } from '@/lib/toast';
 
-export default function FoodPartnersPage() {
+export default function HospitalPartnersPage() {
   const router = useRouter();
-  const [foodPartners, setFoodPartners] = useState<any[]>([]);
+  const [hospitalPartners, setHospitalPartners] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ mealsServed: 0, yearsCombined: 0 });
+  const [stats, setStats] = useState({ patientsServed: 0, yearsCombined: 0 });
   const [showCouponModal, setShowCouponModal] = useState(false);
   const [generatedCoupon, setGeneratedCoupon] = useState<any>(null);
   const [generatingCoupon, setGeneratingCoupon] = useState(false);
@@ -23,65 +23,61 @@ export default function FoodPartnersPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    fetchFoodPartners();
+    fetchHospitalPartners();
   }, []);
 
-  const fetchFoodPartners = async () => {
+  const fetchHospitalPartners = async () => {
     try {
       setLoading(true);
-      const data = await api.get<any[]>('/partners/type/food');
+      const data = await api.get<any[]>('/partners/type/hospital');
       if (Array.isArray(data)) {
         const formatted = data.map((partner: any) => {
-          // Extract image from formData if photo/logo are not available
           let photo = partner.photo || partner.logo;
           if (!photo && partner.formData) {
             if (partner.formData.banner) {
               photo = partner.formData.banner;
-            } else if (partner.formData.restaurantImages && Array.isArray(partner.formData.restaurantImages) && partner.formData.restaurantImages.length > 0) {
-              photo = partner.formData.restaurantImages[0];
+            } else if (partner.formData.hospitalImages && Array.isArray(partner.formData.hospitalImages) && partner.formData.hospitalImages.length > 0) {
+              photo = partner.formData.hospitalImages[0];
             }
           }
           return {
             id: partner._id || partner.id,
-            name: partner.name || 'Unknown',
-            logo: partner.logo || photo || 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&h=400&fit=crop',
-            photo: photo || partner.photo || partner.logo || 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800&h=600&fit=crop',
-            description: partner.description || 'Food partner',
+            name: partner.name || partner.businessName || 'Unknown',
+            logo: partner.logo || photo || 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&h=400&fit=crop',
+            photo: photo || partner.photo || partner.logo || 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&h=600&fit=crop',
+            description: partner.description || 'Hospital partner',
             location: partner.city || partner.location || partner.address || 'India',
             website: partner.website || '#',
-            contact: partner.phone || 'N/A',
-            phone: partner.phone || 'N/A',
+            contact: partner.phone || partner.mobileNumber || 'N/A',
+            phone: partner.phone || partner.mobileNumber || 'N/A',
             email: partner.email || 'N/A',
             address: partner.address || partner.city || 'N/A',
-            operatingHours: 'MON-TUE-WED-THU-FRI-SAT: 09:00 - 21:00',
+            operatingHours: partner.operatingHours || '24/7',
             about: partner.description || '',
             programs: partner.programs || [],
             impact: partner.impact || 'Making a difference',
             since: partner.since || new Date(partner.createdAt).getFullYear().toString() || '2020',
           };
         });
-        setFoodPartners(formatted);
+        setHospitalPartners(formatted);
         
-        // Calculate stats
-        let totalMeals = 0;
+        let totalPatients = 0;
         let totalYears = 0;
         const currentYear = new Date().getFullYear();
         
         formatted.forEach((partner: any) => {
-          // Extract meals from impact string (e.g., "65M+ meals", "10M+", "500K+")
           if (partner.impact) {
             const impactStr = partner.impact.toLowerCase();
-            const mealsMatch = impactStr.match(/([\d.]+)([mk]?)\+?/);
-            if (mealsMatch) {
-              let meals = parseFloat(mealsMatch[1]);
-              const unit = mealsMatch[2];
-              if (unit === 'm') meals *= 1000000;
-              else if (unit === 'k') meals *= 1000;
-              totalMeals += meals;
+            const patientsMatch = impactStr.match(/([\d.]+)([mk]?)\+?/);
+            if (patientsMatch) {
+              let patients = parseFloat(patientsMatch[1]);
+              const unit = patientsMatch[2];
+              if (unit === 'm') patients *= 1000000;
+              else if (unit === 'k') patients *= 1000;
+              totalPatients += patients;
             }
           }
           
-          // Calculate years from since date
           if (partner.since) {
             const sinceYear = parseInt(partner.since);
             if (!isNaN(sinceYear) && sinceYear > 1900) {
@@ -91,19 +87,19 @@ export default function FoodPartnersPage() {
         });
         
         setStats({
-          mealsServed: totalMeals,
+          patientsServed: totalPatients,
           yearsCombined: totalYears,
         });
       } else {
-        setFoodPartners([]);
+        setHospitalPartners([]);
       }
     } catch (error) {
       if (error instanceof ApiError) {
-        console.error('Failed to fetch food partners:', error.message);
+        console.error('Failed to fetch hospital partners:', error.message);
       } else {
-        console.error('Failed to fetch food partners');
+        console.error('Failed to fetch hospital partners');
       }
-      setFoodPartners([]);
+      setHospitalPartners([]);
     } finally {
       setLoading(false);
     }
@@ -114,21 +110,19 @@ export default function FoodPartnersPage() {
       setGeneratingCoupon(true);
       setSelectedPartner(partner);
       
-      // Check if user is logged in
       const token = localStorage.getItem('userToken');
       if (!token || token.trim() === '') {
         showToast('Please login to get a coupon', 'info');
-        localStorage.setItem('redirectAfterLogin', '/partners/food');
+        localStorage.setItem('redirectAfterLogin', '/partners/hospital');
         router.push('/login');
         return;
       }
 
-      // Generate coupon for food partner
       const response = await api.post<any>('/coupons', {
-        amount: 0, // Free coupon for food partner
-        paymentId: `food-partner-${partner.id}-${Date.now()}`,
+        amount: 0,
+        paymentId: `hospital-partner-${partner.id}-${Date.now()}`,
         paymentStatus: 'completed',
-        beneficiaryName: partner.name || 'Food Partner',
+        beneficiaryName: partner.name || 'Hospital Partner',
         partnerId: partner.id,
       });
 
@@ -142,7 +136,7 @@ export default function FoodPartnersPage() {
       if (error instanceof ApiError) {
         if (error.status === 401) {
           showToast('Please login to get a coupon', 'error');
-          localStorage.setItem('redirectAfterLogin', '/partners/food');
+          localStorage.setItem('redirectAfterLogin', '/partners/hospital');
           router.push('/login');
         } else {
           showToast(`Failed to generate coupon: ${error.message}`, 'error');
@@ -176,34 +170,32 @@ export default function FoodPartnersPage() {
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-16">
-        {/* Page Header */}
         <div className="text-center mb-16">
-          <UtensilsCrossed className="h-16 w-16 text-[#10b981] mx-auto mb-6" />
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Food Partners</h1>
+          <Building2 className="h-16 w-16 text-[#10b981] mx-auto mb-6" />
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Hospital Partners</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Working together with leading food organizations to fight hunger and ensure food security across India.
+            Working together with leading hospitals to provide quality healthcare services across India.
           </p>
         </div>
 
-        {/* Stats */}
         <div className="grid md:grid-cols-3 gap-6 mb-12">
           <Card className="p-6 text-center bg-gradient-to-br from-[#10b981] to-[#059669] text-white">
             <Users className="h-10 w-10 mx-auto mb-4" />
-            <div className="text-3xl font-bold mb-2">{foodPartners.length}</div>
-            <div className="text-green-100">Food Partners</div>
+            <div className="text-3xl font-bold mb-2">{hospitalPartners.length}</div>
+            <div className="text-green-100">Hospital Partners</div>
           </Card>
           <Card className="p-6 text-center bg-gradient-to-br from-[#10b981] to-[#059669] text-white">
             <Heart className="h-10 w-10 mx-auto mb-4" />
             <div className="text-3xl font-bold mb-2">
-              {stats.mealsServed >= 1000000 
-                ? `${(stats.mealsServed / 1000000).toFixed(0)}M+`
-                : stats.mealsServed >= 1000
-                ? `${(stats.mealsServed / 1000).toFixed(0)}K+`
-                : stats.mealsServed > 0
-                ? `${stats.mealsServed.toLocaleString()}+`
+              {stats.patientsServed >= 1000000 
+                ? `${(stats.patientsServed / 1000000).toFixed(0)}M+`
+                : stats.patientsServed >= 1000
+                ? `${(stats.patientsServed / 1000).toFixed(0)}K+`
+                : stats.patientsServed > 0
+                ? `${stats.patientsServed.toLocaleString()}+`
                 : '0'}
             </div>
-            <div className="text-green-100">Meals Served</div>
+            <div className="text-green-100">Patients Served</div>
           </Card>
           <Card className="p-6 text-center bg-gradient-to-br from-[#10b981] to-[#059669] text-white">
             <Award className="h-10 w-10 mx-auto mb-4" />
@@ -212,15 +204,14 @@ export default function FoodPartnersPage() {
           </Card>
         </div>
 
-        {/* Partners Grid */}
-        {foodPartners.length > 0 ? (
+        {hospitalPartners.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {foodPartners.map((partner) => (
+            {hospitalPartners.map((partner) => (
             <Card 
               key={partner.id} 
               hover 
               className="overflow-hidden cursor-pointer"
-              onClick={() => router.push(`/partners/food/${partner.id}`)}
+              onClick={() => router.push(`/partners/hospital/${partner.id}`)}
             >
               <div className="relative h-64 bg-gradient-to-br from-[#ecfdf5] to-white">
                 <Image
@@ -248,7 +239,7 @@ export default function FoodPartnersPage() {
                 <p className="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-4">{partner.description}</p>
                 
                 <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-2">Programs:</h4>
+                  <h4 className="text-sm font-semibold text-gray-900 mb-2">Services:</h4>
                   <div className="flex flex-wrap gap-2">
                     {partner.programs.slice(0, 4).map((program: string, index: number) => (
                       <span
@@ -276,7 +267,6 @@ export default function FoodPartnersPage() {
                   </div>
                 </div>
 
-                {/* Action Buttons */}
                 <div className="mt-4 grid grid-cols-2 gap-2" onClick={(e) => e.stopPropagation()}>
                   <Button 
                     variant="outline" 
@@ -284,18 +274,18 @@ export default function FoodPartnersPage() {
                     className="w-full"
                     onClick={(e) => {
                       e.stopPropagation();
-                      router.push(`/partners/food/${partner.id}`);
+                      handleGetCoupon(partner);
                     }}
+                    disabled={generatingCoupon}
                   >
                     <Ticket className="h-4 w-4 mr-1" />
-                    Get Coupon
+                    {generatingCoupon ? 'Generating...' : 'Get Coupon'}
                   </Button>
                   <button
                     className="w-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold text-sm py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg"
                     onClick={(e) => {
                       e.stopPropagation();
                       let phoneNumber = (partner.phone || partner.contact || '').replace(/[\s\-+()]/g, '');
-                      // Ensure country code is present (add 91 for India if not present)
                       if (phoneNumber && !phoneNumber.startsWith('91') && phoneNumber.length === 10) {
                         phoneNumber = '91' + phoneNumber;
                       }
@@ -316,16 +306,15 @@ export default function FoodPartnersPage() {
           </div>
         ) : (
           <div className="text-center py-16">
-            <p className="text-gray-500 text-lg mb-4">No food partners available yet</p>
+            <p className="text-gray-500 text-lg mb-4">No hospital partners available yet</p>
             <p className="text-gray-400">Check back soon for our partner listings</p>
           </div>
         )}
 
-        {/* CTA */}
         <Card className="p-8 bg-gradient-to-r from-[#10b981] to-[#059669] text-white text-center">
-          <h2 className="text-3xl font-bold mb-4">Become a Food Partner</h2>
+          <h2 className="text-3xl font-bold mb-4">Become a Hospital Partner</h2>
           <p className="text-green-100 mb-6 text-lg">
-            Join us in the fight against hunger. Partner with Care Foundation Trust® to make a difference.
+            Join us in providing quality healthcare. Partner with Care Foundation Trust® to make a difference.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/become-partner">
@@ -342,7 +331,6 @@ export default function FoodPartnersPage() {
         </Card>
       </div>
       
-      {/* Coupon Modal */}
       {showCouponModal && generatedCoupon && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 relative">

@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import DataTable from '@/components/admin/DataTable';
 import Button from '@/components/ui/Button';
+import ViewModal from '@/components/admin/ViewModal';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import { Plus, Eye, Edit, Trash2, BookOpen, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { api, ApiError } from '@/lib/api';
 import { showToast } from '@/lib/toast';
-import ConfirmModal from '@/components/ui/ConfirmModal';
 
 interface Blog {
   _id?: string;
@@ -19,11 +21,17 @@ interface Blog {
   publishedDate?: string;
   createdAt?: string;
   status: 'published' | 'draft';
+  content?: string;
+  excerpt?: string;
+  image?: string;
+  tags?: string;
 }
 
 export default function BlogsPage() {
+  const router = useRouter();
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -74,6 +82,10 @@ export default function BlogsPage() {
           category: blog.category || 'General',
           publishedDate: blog.createdAt ? new Date(blog.createdAt).toLocaleDateString() : 'N/A',
           status: blog.status || 'draft',
+          content: blog.content || '',
+          excerpt: blog.excerpt || '',
+          image: blog.image || '',
+          tags: blog.tags || '',
         };
       });
       setBlogs(formatted);
@@ -86,6 +98,39 @@ export default function BlogsPage() {
       setBlogs([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleView = async (blog: Blog) => {
+    try {
+      // Fetch full blog data for view
+      const id = blog._id || blog.id;
+      if (id) {
+        const response = await api.get<any>(`/blogs/${id}`);
+        const fullBlog = response.data || response;
+        setSelectedBlog({
+          ...blog,
+          content: fullBlog.content || blog.content || '',
+          excerpt: fullBlog.excerpt || blog.excerpt || '',
+          image: fullBlog.image || blog.image || '',
+          tags: fullBlog.tags || blog.tags || '',
+        });
+        setViewModalOpen(true);
+      } else {
+        setSelectedBlog(blog);
+        setViewModalOpen(true);
+      }
+    } catch (error) {
+      // If fetch fails, show with available data
+      setSelectedBlog(blog);
+      setViewModalOpen(true);
+    }
+  };
+
+  const handleEdit = (blog: Blog) => {
+    const id = blog._id || blog.id;
+    if (id) {
+      router.push(`/admin/blogs/edit/${id}`);
     }
   };
 
@@ -174,10 +219,22 @@ export default function BlogsPage() {
         data={blogs}
         actions={(row) => (
           <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-            <Button variant="ghost" size="sm" title="View">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleView(row)}
+              title="View Details"
+              disabled={updating === (row._id || String(row.id))}
+            >
               <Eye className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm" title="Edit">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(row)}
+              title="Edit"
+              disabled={updating === (row._id || String(row.id))}
+            >
               <Edit className="h-4 w-4" />
             </Button>
             <Button 
@@ -185,29 +242,53 @@ export default function BlogsPage() {
               size="sm" 
               className="text-red-600 hover:text-red-700 hover:bg-red-50"
               onClick={() => handleDeleteClick(row)}
-              disabled={updating === (row._id || row.id)}
+              disabled={updating === (row._id || String(row.id))}
               title="Delete"
             >
-              <Trash2 className="h-4 w-4" />
+              {updating === (row._id || String(row.id)) ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
             </Button>
           </div>
         )}
       />
 
-      {/* Delete Modal */}
+      {/* View Modal */}
       {selectedBlog && (
-        <ConfirmModal
-          isOpen={deleteModalOpen}
-          onClose={() => {
-            setDeleteModalOpen(false);
-            setSelectedBlog(null);
-          }}
-          title="Delete Blog"
-          message={`Are you sure you want to delete "${selectedBlog.title}"? This action cannot be undone and all data will be permanently removed.`}
-          onConfirm={handleDeleteConfirm}
-          confirmText="Delete"
-          variant="danger"
-        />
+        <>
+          <ViewModal
+            isOpen={viewModalOpen}
+            onClose={() => {
+              setViewModalOpen(false);
+              setSelectedBlog(null);
+            }}
+            title="Blog Details"
+            data={{
+              'Title': selectedBlog.title,
+              'Author': selectedBlog.author || 'N/A',
+              'Category': selectedBlog.category || 'N/A',
+              'Status': selectedBlog.status,
+              'Published Date': selectedBlog.publishedDate || 'N/A',
+              'Excerpt': selectedBlog.excerpt || 'N/A',
+              'Tags': selectedBlog.tags || 'N/A',
+              'Content': selectedBlog.content ? (selectedBlog.content.length > 200 ? selectedBlog.content.substring(0, 200) + '...' : selectedBlog.content) : 'N/A',
+            }}
+          />
+          <ConfirmModal
+            isOpen={deleteModalOpen}
+            onClose={() => {
+              setDeleteModalOpen(false);
+              setSelectedBlog(null);
+            }}
+            title="Delete Blog"
+            message={`Are you sure you want to delete "${selectedBlog.title}"? This action cannot be undone and all data will be permanently removed.`}
+            onConfirm={handleDeleteConfirm}
+            confirmText="Delete"
+            variant="danger"
+          />
+        </>
       )}
     </div>
   );

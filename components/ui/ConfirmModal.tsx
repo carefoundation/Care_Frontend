@@ -2,12 +2,13 @@
 
 import { X } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { ReactNode } from 'react';
 
 interface ConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  message: string;
+  message: string | ReactNode;
   onConfirm: () => void;
   confirmText?: string;
   cancelText?: string;
@@ -28,7 +29,6 @@ export default function ConfirmModal({
 
   const handleConfirm = () => {
     onConfirm();
-    onClose();
   };
 
   return (
@@ -55,7 +55,11 @@ export default function ConfirmModal({
 
           {/* Content */}
           <div className="p-6">
-            <p className="text-gray-700">{message}</p>
+            {typeof message === 'string' ? (
+              <p className="text-gray-700">{message}</p>
+            ) : (
+              <div className="text-gray-700">{message}</div>
+            )}
           </div>
 
           {/* Footer */}

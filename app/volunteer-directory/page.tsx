@@ -167,7 +167,7 @@ export default function VolunteerDirectoryPage() {
                   </div>
                   <div className="mt-3 pt-3 border-t border-gray-200">
                     <div className="flex flex-wrap gap-1 justify-center">
-                      {volunteer.skills.slice(0, 2).map((skill, index) => (
+                      {volunteer.skills.slice(0, 2).map((skill: string, index: number) => (
                         <span
                           key={index}
                           className="px-2 py-1 bg-[#ecfdf5] text-[#10b981] text-xs font-medium rounded"

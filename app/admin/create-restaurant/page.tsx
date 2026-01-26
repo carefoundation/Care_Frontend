@@ -50,7 +50,6 @@ export default function CreateRestaurantPage() {
     organizationName: '',
     email: '',
     phone: '',
-    expectedAttendees: '0',
     time: '',
     cuisineType: '',
     description: '',
@@ -86,6 +85,7 @@ export default function CreateRestaurantPage() {
     businessLicense: null as File | null,
     foodLicense: null as File | null,
     restaurantImages: [] as File[],
+    cftMenu: [] as File[],
   });
 
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
@@ -239,6 +239,13 @@ export default function CreateRestaurantPage() {
     if (e.target.files) {
       if (field === 'restaurantImages') {
         setFiles(prev => ({ ...prev, restaurantImages: Array.from(e.target.files || []) }));
+      } else if (field === 'cftMenu') {
+        const selectedFiles = Array.from(e.target.files || []);
+        if (selectedFiles.length > 2) {
+          showToast('Maximum 2 CFT Menu files allowed', 'error');
+          return;
+        }
+        setFiles(prev => ({ ...prev, cftMenu: selectedFiles }));
       } else if (field === 'banner') {
         const file = e.target.files[0];
         if (file.size > 10 * 1024 * 1024) {
@@ -285,6 +292,9 @@ export default function CreateRestaurantPage() {
       const restaurantImagesBase64 = files.restaurantImages.length > 0 
         ? await Promise.all(files.restaurantImages.map(file => convertFileToBase64(file)))
         : [];
+      const cftMenuBase64 = files.cftMenu.length > 0 
+        ? await Promise.all(files.cftMenu.map(file => convertFileToBase64(file)))
+        : [];
       
       const partnerData = {
         name: formData.organizationName,
@@ -305,6 +315,7 @@ export default function CreateRestaurantPage() {
           businessLicense: businessLicenseBase64,
           foodLicense: foodLicenseBase64,
           restaurantImages: restaurantImagesBase64,
+          cftMenu: cftMenuBase64,
         },
       };
 
@@ -317,7 +328,6 @@ export default function CreateRestaurantPage() {
           organizationName: '',
           email: '',
           phone: '',
-          expectedAttendees: '0',
           time: '',
           cuisineType: '',
           description: '',
@@ -352,6 +362,7 @@ export default function CreateRestaurantPage() {
           businessLicense: null,
           foodLicense: null,
           restaurantImages: [],
+          cftMenu: [],
         });
         setBannerPreview(null);
       } else {
@@ -517,20 +528,6 @@ export default function CreateRestaurantPage() {
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-900 mb-2">
-                      Expected Attendees
-                    </label>
-                    <input
-                      type="number"
-                      name="expectedAttendees"
-                      value={formData.expectedAttendees}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:border-transparent bg-white"
-                      placeholder="0"
-                      min="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">
                       Time
                     </label>
                     <input
@@ -541,23 +538,22 @@ export default function CreateRestaurantPage() {
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:border-transparent bg-white"
                     />
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Cuisine Type
-                  </label>
-                  <select
-                    name="cuisineType"
-                    value={formData.cuisineType}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:border-transparent appearance-none bg-white"
-                  >
-                    <option value="">Select Cuisine Type</option>
-                    {cuisineTypes.map(cuisine => (
-                      <option key={cuisine} value={cuisine}>{cuisine}</option>
-                    ))}
-                  </select>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      Cuisine Type
+                    </label>
+                    <select
+                      name="cuisineType"
+                      value={formData.cuisineType}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:border-transparent appearance-none bg-white"
+                    >
+                      <option value="">Select Cuisine Type</option>
+                      {cuisineTypes.map(cuisine => (
+                        <option key={cuisine} value={cuisine}>{cuisine}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div>
@@ -843,29 +839,56 @@ export default function CreateRestaurantPage() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-900 mb-2 uppercase">
-                  Upload Restaurant Images (Multiple)
-                </label>
-                <label className="cursor-pointer">
-                  <span className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Choose Files
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={(e) => handleFileChange(e, 'restaurantImages')}
-                    className="hidden"
-                  />
-                </label>
-                <p className="text-xs text-gray-500 mt-1">
-                  {files.restaurantImages.length > 0 
-                    ? `${files.restaurantImages.length} file(s) selected`
-                    : 'No file chosen'}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">You can select multiple photos</p>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-900 mb-2 uppercase">
+                    Upload Restaurant Images (Multiple)
+                  </label>
+                  <label className="cursor-pointer">
+                    <span className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Choose Files
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => handleFileChange(e, 'restaurantImages')}
+                      className="hidden"
+                    />
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {files.restaurantImages.length > 0 
+                      ? `${files.restaurantImages.length} file(s) selected`
+                      : 'No file chosen'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">You can select multiple photos</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-900 mb-2 uppercase">
+                    Upload CFT Menu
+                  </label>
+                  <label className="cursor-pointer">
+                    <span className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Choose Files
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      multiple
+                      max={2}
+                      onChange={(e) => handleFileChange(e, 'cftMenu')}
+                      className="hidden"
+                    />
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {files.cftMenu.length > 0 
+                      ? `${files.cftMenu.length} file(s) selected`
+                      : 'No file chosen'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Maximum 2 files allowed</p>
+                </div>
               </div>
             </div>
 

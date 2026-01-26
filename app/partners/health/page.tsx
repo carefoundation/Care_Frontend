@@ -3,18 +3,24 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Heart, Stethoscope, Users, Award, Map, Loader2 } from 'lucide-react';
+import { Heart, Stethoscope, Users, Award, Map, Loader2, Ticket, X, QrCode, Copy, CheckCircle } from 'lucide-react';
 import Footer from '@/components/layout/Footer';
 import Card from '@/components/ui/Card';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { api, ApiError } from '@/lib/api';
+import { showToast } from '@/lib/toast';
 
 export default function HealthPartnersPage() {
   const router = useRouter();
   const [healthPartners, setHealthPartners] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ patientsServed: 0, yearsCombined: 0 });
+  const [showCouponModal, setShowCouponModal] = useState(false);
+  const [generatedCoupon, setGeneratedCoupon] = useState<any>(null);
+  const [generatingCoupon, setGeneratingCoupon] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState<any>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchHealthPartners();
@@ -106,6 +112,62 @@ export default function HealthPartnersPage() {
       setHealthPartners([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGetCoupon = async (partner: any) => {
+    try {
+      setGeneratingCoupon(true);
+      setSelectedPartner(partner);
+      
+      // Check if user is logged in
+      const token = localStorage.getItem('userToken');
+      if (!token || token.trim() === '') {
+        showToast('Please login to get a coupon', 'info');
+        localStorage.setItem('redirectAfterLogin', '/partners/health');
+        router.push('/login');
+        return;
+      }
+
+      // Generate coupon for health partner
+      const response = await api.post<any>('/coupons', {
+        amount: 0, // Free coupon for health partner
+        paymentId: `health-partner-${partner.id}-${Date.now()}`,
+        paymentStatus: 'completed',
+        beneficiaryName: partner.name || 'Health Partner',
+        partnerId: partner.id,
+      });
+
+      if (response.data) {
+        setGeneratedCoupon(response.data);
+        setShowCouponModal(true);
+        showToast('Coupon generated successfully!', 'success');
+      }
+    } catch (error) {
+      console.error('Error generating coupon:', error);
+      if (error instanceof ApiError) {
+        if (error.status === 401) {
+          showToast('Please login to get a coupon', 'error');
+          localStorage.setItem('redirectAfterLogin', '/partners/health');
+          router.push('/login');
+        } else {
+          showToast(`Failed to generate coupon: ${error.message}`, 'error');
+        }
+      } else {
+        showToast('Failed to generate coupon. Please try again.', 'error');
+      }
+    } finally {
+      setGeneratingCoupon(false);
+    }
+  };
+
+  const handleCopyCouponCode = () => {
+    if (generatedCoupon?.couponCode || generatedCoupon?.code) {
+      const code = generatedCoupon.couponCode || generatedCoupon.code;
+      navigator.clipboard.writeText(code);
+      setCopied(true);
+      showToast('Coupon code copied to clipboard!', 'success');
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -226,10 +288,13 @@ export default function HealthPartnersPage() {
                     variant="outline" 
                     size="sm" 
                     className="w-full"
-                    onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(partner.address || partner.location)}`, '_blank')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/partners/health/${partner.id}`);
+                    }}
                   >
                     <Map className="h-4 w-4 mr-1" />
-                    View Map
+                    Consult Now
                   </Button>
                   <button
                     className="w-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold text-sm py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg"
@@ -282,6 +347,121 @@ export default function HealthPartnersPage() {
           </div>
         </Card>
       </div>
+      
+      {/* Coupon Modal */}
+      {showCouponModal && generatedCoupon && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 relative">
+            <button
+              onClick={() => {
+                setShowCouponModal(false);
+                setGeneratedCoupon(null);
+                setSelectedPartner(null);
+              }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+
+            <div className="text-center mb-6">
+              <div className="bg-[#10b981] rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <CheckCircle className="h-8 w-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Coupon Generated!</h2>
+              <p className="text-gray-600">Your coupon is ready to use</p>
+            </div>
+
+            <Card className="p-6 mb-4">
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Coupon Code</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-2xl font-bold font-mono text-[#10b981] flex-1">
+                      {generatedCoupon.couponCode || generatedCoupon.code}
+                    </p>
+                    <button
+                      onClick={handleCopyCouponCode}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      title="Copy code"
+                    >
+                      {copied ? (
+                        <CheckCircle className="h-5 w-5 text-[#10b981]" />
+                      ) : (
+                        <Copy className="h-5 w-5 text-gray-600" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {selectedPartner && (
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Partner</p>
+                    <p className="text-lg font-semibold text-gray-900">{selectedPartner.name}</p>
+                  </div>
+                )}
+
+                {generatedCoupon.expiryDate && (
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Valid Until</p>
+                    <p className="text-base font-semibold text-gray-900">
+                      {new Date(generatedCoupon.expiryDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                )}
+
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="flex justify-center">
+                    {generatedCoupon.qrCode?.url || generatedCoupon.qrCode ? (
+                      <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
+                        <Image
+                          src={generatedCoupon.qrCode?.url || generatedCoupon.qrCode}
+                          alt="QR Code"
+                          width={200}
+                          height={200}
+                          className="rounded"
+                          unoptimized
+                        />
+                        <p className="text-xs text-gray-500 mt-2 text-center">Scan to redeem</p>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-100 p-8 rounded-lg">
+                        <QrCode className="h-16 w-16 text-gray-400 mx-auto" />
+                        <p className="text-xs text-gray-500 mt-2 text-center">QR Code not available</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => {
+                  setShowCouponModal(false);
+                  setGeneratedCoupon(null);
+                  setSelectedPartner(null);
+                }}
+                variant="outline"
+                className="flex-1"
+              >
+                Close
+              </Button>
+              <Button
+                onClick={() => {
+                  router.push('/dashboard');
+                }}
+                className="flex-1 bg-[#10b981] hover:bg-[#059669] text-white"
+              >
+                View in Dashboard
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <Footer />
     </div>

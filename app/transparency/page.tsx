@@ -1,6 +1,6 @@
 'use client';
 
-import { FileText, TrendingUp, DollarSign, CheckCircle, BarChart3, Download } from 'lucide-react';
+import { FileText, TrendingUp, Wallet, CheckCircle, BarChart3, Download } from 'lucide-react';
 import Footer from '@/components/layout/Footer';
 import Card from '@/components/ui/Card';
 
@@ -34,7 +34,7 @@ export default function TransparencyPage() {
 
   const transparencyMetrics = [
     {
-      icon: DollarSign,
+      icon: Wallet,
       title: 'Financial Transparency',
       description: 'All financial reports are publicly available and audited annually by certified auditors.',
       value: '100%',

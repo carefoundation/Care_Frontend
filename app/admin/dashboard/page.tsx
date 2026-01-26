@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Users, Target, DollarSign, ArrowUp, HeartHandshake, Ticket, Building2, Stethoscope, CheckCircle2, Loader2 } from 'lucide-react';
+import { Users, Target, Wallet, ArrowUp, HeartHandshake, Ticket, Building2, Stethoscope, CheckCircle2, Loader2 } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
@@ -184,7 +184,7 @@ export default function AdminDashboard() {
     {
       title: 'Total Donations',
       value: formatCurrency(stats.totalDonations),
-      icon: DollarSign,
+      icon: Wallet,
       color: 'text-[#10b981]',
       bg: 'bg-[#ecfdf5]',
       gradient: 'from-[#10b981] to-[#059669]',

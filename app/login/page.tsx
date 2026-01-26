@@ -85,10 +85,13 @@ export default function LoginPage() {
         const redirectUrl = localStorage.getItem('redirectAfterLogin');
         if (redirectUrl) {
           localStorage.removeItem('redirectAfterLogin');
-          router.push(redirectUrl);
+          // Small delay to ensure token is saved
+          setTimeout(() => {
+            router.push(redirectUrl);
+          }, 100);
         } else {
-          // If no redirect URL, go to home page instead of dashboard
-          router.push('/');
+          // If no redirect URL, go to dashboard for regular users
+          router.push('/dashboard');
         }
       } else if (response && response.user) {
         // Handle alternative response format
@@ -114,15 +117,13 @@ export default function LoginPage() {
         const redirectUrl = localStorage.getItem('redirectAfterLogin');
         if (redirectUrl) {
           localStorage.removeItem('redirectAfterLogin');
-          router.push(redirectUrl);
+          // Small delay to ensure token is saved
+          setTimeout(() => {
+            router.push(redirectUrl);
+          }, 100);
         } else {
-          // Redirect to role-based dashboard
-          const role = response.user.role || 'donor';
-          if (role === 'donor' || role === 'beneficiary' || role === 'volunteer' || role === 'vendor' || role === 'fundraiser' || role === 'partner') {
-            router.push('/donor/dashboard');
-          } else {
-            router.push('/donor/dashboard');
-          }
+          // If no redirect URL, go to dashboard for regular users
+          router.push('/dashboard');
         }
       }
     } catch (error: any) {

@@ -48,8 +48,8 @@ export default function DonorDashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const role = localStorage.getItem('userRole') as typeof userRole || 'donor';
-      setUserRole(role);
+      const role = localStorage.getItem('userRole') as typeof userRole | 'admin' || 'donor';
+      setUserRole(role as typeof userRole);
 
       // Check user approval status
       let partnerFormApprovedValue = false;
@@ -203,8 +203,10 @@ export default function DonorDashboardPage() {
       }
 
       // Calculate stats based on role
-      const calculatedStats = getStats(role);
-      setStats(calculatedStats);
+      if (role !== 'admin') {
+        const calculatedStats = getStats(role as typeof userRole);
+        setStats(calculatedStats);
+      }
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         window.location.href = '/login';
@@ -501,10 +503,6 @@ export default function DonorDashboardPage() {
         <Card className="p-6 mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-900">Issue Coupons</h2>
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Coupon
-            </Button>
           </div>
           <p className="text-gray-600">Create coupons for beneficiaries</p>
         </Card>

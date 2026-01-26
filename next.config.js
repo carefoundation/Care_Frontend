@@ -16,7 +16,6 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
-  swcMinify: true,
   experimental: {
     optimizePackageImports: ['lucide-react', 'react-easy-crop'],
   },
@@ -24,7 +23,6 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
   productionBrowserSourceMaps: false,
-  optimizeFonts: true,
 };
 
 module.exports = nextConfig;

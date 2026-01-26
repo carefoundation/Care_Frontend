@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowRight, CreditCard, Lock, CheckCircle, ArrowLeft, Shield, Building2, Smartphone, QrCode, RefreshCw, Copy } from 'lucide-react';
+import { ArrowRight, CreditCard, Lock, CheckCircle, ArrowLeft, Shield, Building2, Smartphone, QrCode, RefreshCw, Copy, Download, X } from 'lucide-react';
 import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { api, ApiError } from '@/lib/api';
 import { showToast } from '@/lib/toast';
 import Script from 'next/script';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface DonationData {
   amount: string;
@@ -18,6 +20,17 @@ interface DonationData {
   phone: string;
   campaignId?: string;
   campaignTitle?: string;
+  partnerId?: string;
+}
+
+interface CouponData {
+  id: string;
+  couponCode: string;
+  qrCode: string;
+  amount: number;
+  expiryDate: string;
+  partnerId?: string;
+  partnerName?: string;
 }
 
 export default function PaymentPage() {
@@ -43,45 +56,70 @@ export default function PaymentPage() {
   const [donorName, setDonorName] = useState('');
   const [donorEmail, setDonorEmail] = useState('');
   const [donorPhone, setDonorPhone] = useState('');
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [generatedCoupon, setGeneratedCoupon] = useState<CouponData | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [partnerName, setPartnerName] = useState<string>('');
+  const couponRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Get donation data from localStorage (no login required)
-    if (typeof window !== 'undefined') {
-      const pendingDonation = localStorage.getItem('pendingDonation');
-      if (pendingDonation) {
-        try {
-          const data = JSON.parse(pendingDonation);
-          // Get user info if available (optional - user may not be logged in)
-          const userEmail = localStorage.getItem('userEmail') || '';
-          const userName = localStorage.getItem('userName') || '';
-          // Merge donation data with user info if missing
-          const donationDataWithUser = {
-            amount: data.amount || '',
-            name: data.name || userName || '',
-            email: data.email || userEmail || '',
-            phone: data.phone || '',
-            campaignId: data.campaignId || '',
-            campaignTitle: data.campaignTitle || '',
-          };
-          setDonationData(donationDataWithUser);
-          setDonorName(donationDataWithUser.name);
-          setDonorEmail(donationDataWithUser.email);
-          setDonorPhone(donationDataWithUser.phone);
-          setIsAuthenticated(true);
-          // Generate QR code URL for UPI payment if amount is available
-          if (donationDataWithUser.amount) {
-            const upiString = `upi://pay?pa=care@razorpay&pn=Care%20Foundation&am=${donationDataWithUser.amount}&cu=INR&tn=Donation`;
-          const encodedUpi = encodeURIComponent(upiString);
-          setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedUpi}`);
-          }
-        } catch (error) {
-          console.error('Error parsing donation data:', error);
-          router.push('/');
-        }
-      } else {
-        // No donation data, redirect to home
-        router.push('/');
+    if (typeof window === 'undefined') return;
+
+    // Check if user is logged in first
+    const token = localStorage.getItem('userToken');
+    const loggedIn = !!token && token.trim() !== '';
+    setIsLoggedIn(loggedIn);
+
+    // Get donation data from localStorage
+    const pendingDonation = localStorage.getItem('pendingDonation');
+    if (!pendingDonation) {
+      // No donation data, redirect to home
+      router.push('/');
+      return;
+    }
+
+    try {
+      const data = JSON.parse(pendingDonation);
+      // Get user info if available
+      const userEmail = localStorage.getItem('userEmail') || '';
+      const userName = localStorage.getItem('userName') || '';
+      // Merge donation data with user info if missing
+      const donationDataWithUser = {
+        amount: data.amount || '',
+        name: data.name || userName || '',
+        email: data.email || userEmail || '',
+        phone: data.phone || '',
+        campaignId: data.campaignId || '',
+        campaignTitle: data.campaignTitle || '',
+        partnerId: data.partnerId || null,
+      };
+
+      // Check if login is required for partner donations - do this BEFORE setting state
+      if (donationDataWithUser.partnerId && !loggedIn) {
+        // Save redirect URL and preserve donation data
+        localStorage.setItem('redirectAfterLogin', '/payment');
+        // Donation data is already in localStorage, so it will be preserved
+        showToast('Please login to create a coupon for partner donations', 'info');
+        router.push('/login');
+        return;
       }
+
+      // Set donation data only if we're not redirecting
+      setDonationData(donationDataWithUser);
+      setDonorName(donationDataWithUser.name);
+      setDonorEmail(donationDataWithUser.email);
+      setDonorPhone(donationDataWithUser.phone);
+      setIsAuthenticated(true);
+      
+      // Generate QR code URL for UPI payment if amount is available
+      if (donationDataWithUser.amount) {
+        const upiString = `upi://pay?pa=care@razorpay&pn=Care%20Foundation&am=${donationDataWithUser.amount}&cu=INR&tn=Donation`;
+        const encodedUpi = encodeURIComponent(upiString);
+        setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedUpi}`);
+      }
+    } catch (error) {
+      console.error('Error parsing donation data:', error);
+      router.push('/');
     }
   }, [router]);
 
@@ -105,23 +143,9 @@ export default function PaymentPage() {
     setIsProcessing(true);
     
     try {
-      const finalDonorName = donorName || donationData?.name || '';
-      const finalDonorEmail = (donorEmail || donationData?.email || '').trim().toLowerCase();
+      const finalDonorName = donorName || donationData?.name || 'Donor';
+      const finalDonorEmail = (donorEmail || donationData?.email || 'donor@example.com').trim().toLowerCase();
       const finalDonorPhone = donorPhone || donationData?.phone || '';
-      
-      if (!finalDonorName || !finalDonorEmail) {
-        showToast('Please provide name and email for donation', 'error');
-        setIsProcessing(false);
-        return;
-      }
-      
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(finalDonorEmail)) {
-        showToast('Please provide a valid email address', 'error');
-        setIsProcessing(false);
-        return;
-      }
 
       const amount = parseFloat(donationData?.amount || '0');
       if (amount < 1) {
@@ -131,7 +155,12 @@ export default function PaymentPage() {
       }
 
       // Create Razorpay order
-      const orderData = await api.post('/razorpay/create-order', {
+      const orderData = await api.post<{
+        keyId: string;
+        amount: number;
+        currency: string;
+        orderId: string;
+      }>('/razorpay/create-order', {
         amount: amount,
         currency: 'INR',
         receipt: `receipt_${Date.now()}`,
@@ -177,7 +206,7 @@ export default function PaymentPage() {
             const firstName = nameParts[0] || '';
             const lastName = nameParts.slice(1).join(' ') || '';
 
-            await api.post('/razorpay/verify-payment', {
+            const paymentResponse = await api.post<any>('/razorpay/verify-payment', {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
@@ -187,8 +216,32 @@ export default function PaymentPage() {
               email: finalDonorEmail,
               phoneNumber: finalDonorPhone || null,
               campaignId: donationData?.campaignId || null,
+              partnerId: donationData?.partnerId || null,
               message: 'Donation via Razorpay',
             });
+
+            // Check if coupon was created
+            if (paymentResponse?.coupon) {
+              const couponData = paymentResponse.coupon;
+              setGeneratedCoupon(couponData);
+              
+              // Set partner name if available in response
+              if (couponData.partnerName) {
+                setPartnerName(couponData.partnerName);
+              } else if (couponData.partnerId) {
+                // Fallback: Fetch partner name if not in response
+                try {
+                  const partnerResponse = await api.get<any>(`/partners/${couponData.partnerId}`);
+                  if (partnerResponse?.name || partnerResponse?.businessName) {
+                    setPartnerName(partnerResponse.name || partnerResponse.businessName);
+                  }
+                } catch (error) {
+                  console.error('Failed to fetch partner name:', error);
+                }
+              }
+              
+              setPaymentSuccess(true);
+            }
 
             // Clear pending donation data
             if (typeof window !== 'undefined') {
@@ -197,13 +250,26 @@ export default function PaymentPage() {
 
             showToast(`Payment successful! Thank you for your donation of ₹${amount}`, 'success');
             
-            setTimeout(() => {
-              router.push('/');
-            }, 1500);
+            // If no coupon, redirect immediately
+            if (!paymentResponse?.coupon) {
+              setTimeout(() => {
+                router.push('/dashboard');
+              }, 1500);
+            }
           } catch (error) {
             console.error('Payment verification error:', error);
             if (error instanceof ApiError) {
-              showToast(`Payment verification failed: ${error.message}`, 'error');
+              if (error.status === 401) {
+                showToast('Please login to create a coupon', 'error');
+                // Preserve donation data and set redirect
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('redirectAfterLogin', '/payment');
+                  // Donation data is already in localStorage, so it will be preserved
+                }
+                router.push('/login');
+              } else {
+                showToast(`Payment verification failed: ${error.message}`, 'error');
+              }
             } else {
               showToast('Payment verification failed. Please contact support.', 'error');
             }
@@ -235,23 +301,9 @@ export default function PaymentPage() {
     setIsProcessing(true);
     
     try {
-      const finalDonorName = donorName || donationData?.name || '';
-      const finalDonorEmail = (donorEmail || donationData?.email || '').trim().toLowerCase();
+      const finalDonorName = donorName || donationData?.name || 'Donor';
+      const finalDonorEmail = (donorEmail || donationData?.email || 'donor@example.com').trim().toLowerCase();
       const finalDonorPhone = donorPhone || donationData?.phone || '';
-      
-      if (!finalDonorName || !finalDonorEmail) {
-        showToast('Please provide name and email for donation', 'error');
-        setIsProcessing(false);
-        return;
-      }
-      
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(finalDonorEmail)) {
-        showToast('Please provide a valid email address', 'error');
-        setIsProcessing(false);
-        return;
-      }
       
       const nameParts = finalDonorName.split(' ');
       const firstName = nameParts[0] || '';
@@ -264,12 +316,36 @@ export default function PaymentPage() {
         email: finalDonorEmail,
         phoneNumber: finalDonorPhone || null,
         campaignId: donationData?.campaignId || null,
+        partnerId: donationData?.partnerId || null,
         message: `Donation via ${paymentGateway}`,
         paymentMethod: paymentGateway,
         status: 'completed',
       };
 
-      await api.post('/donations', donationPayload);
+      const donationResponse = await api.post<any>('/donations', donationPayload);
+      
+      // Check if coupon was created
+      if (donationResponse?.coupon) {
+        const couponData = donationResponse.coupon;
+        setGeneratedCoupon(couponData);
+        
+        // Set partner name if available in response
+        if (couponData.partnerName) {
+          setPartnerName(couponData.partnerName);
+        } else if (couponData.partnerId) {
+          // Fallback: Fetch partner name if not in response
+          try {
+            const partnerResponse = await api.get<any>(`/partners/${couponData.partnerId}`);
+            if (partnerResponse?.name || partnerResponse?.businessName) {
+              setPartnerName(partnerResponse.name || partnerResponse.businessName);
+            }
+          } catch (error) {
+            console.error('Failed to fetch partner name:', error);
+          }
+        }
+        
+        setPaymentSuccess(true);
+      }
       
       // Clear pending donation data
       if (typeof window !== 'undefined') {
@@ -280,19 +356,111 @@ export default function PaymentPage() {
       const gatewayName = paymentGateway === 'demo' ? 'Demo Payment' : 'Yes Bank';
       showToast(`Payment successful via ${gatewayName}! Thank you for your donation of ₹${donationData?.amount || '0'}`, 'success');
       
-      // Redirect to home page (no login required)
-      setTimeout(() => {
-        router.push('/');
-      }, 1500);
+      // If no coupon, redirect immediately
+      if (!donationResponse?.coupon) {
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1500);
+      }
     } catch (error) {
       setIsProcessing(false);
       if (error instanceof ApiError) {
-        showToast(`Payment failed: ${error.message}`, 'error');
+        if (error.status === 401) {
+          showToast('Please login to create a coupon', 'error');
+          // Preserve donation data and set redirect
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('redirectAfterLogin', '/payment');
+            // Donation data is already in localStorage, so it will be preserved
+          }
+          router.push('/login');
+        } else {
+          showToast(`Payment failed: ${error.message}`, 'error');
+        }
       } else {
         showToast('Payment failed. Please try again.', 'error');
       }
       console.error('Donation submission error:', error);
     }
+  };
+
+  const handleDownloadCoupon = async () => {
+    if (!generatedCoupon || !couponRef.current) {
+      showToast('Coupon data not available', 'error');
+      return;
+    }
+    
+    try {
+      showToast('Generating coupon PDF...', 'info');
+      
+      // Wait a bit for any rendering to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Convert HTML to canvas using html2canvas
+      const canvas = await html2canvas(couponRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: couponRef.current.offsetWidth,
+        height: couponRef.current.offsetHeight,
+      });
+      
+      // Get canvas dimensions
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      
+      // Calculate PDF dimensions (A4 portrait: 210mm x 297mm)
+      const pdfWidth = 210; // mm
+      const pdfHeight = 297; // mm
+      const mmToPx = 3.779527559; // 1mm = 3.779527559px at 96dpi
+      
+      // Calculate image dimensions in mm maintaining aspect ratio
+      const imgWidthMm = imgWidth / mmToPx;
+      const imgHeightMm = imgHeight / mmToPx;
+      
+      // Create PDF
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      // If content is taller than page, scale it down
+      let finalWidth = imgWidthMm;
+      let finalHeight = imgHeightMm;
+      
+      if (imgHeightMm > pdfHeight - 20) {
+        // Scale down to fit with margins
+        const scale = (pdfHeight - 20) / imgHeightMm;
+        finalWidth = imgWidthMm * scale;
+        finalHeight = imgHeightMm * scale;
+      }
+      
+      if (finalWidth > pdfWidth - 20) {
+        // Scale down width if needed
+        const scale = (pdfWidth - 20) / finalWidth;
+        finalWidth = finalWidth * scale;
+        finalHeight = finalHeight * scale;
+      }
+      
+      // Center the image on the page
+      const xOffset = (pdfWidth - finalWidth) / 2;
+      const yOffset = (pdfHeight - finalHeight) / 2;
+      
+      // Convert canvas to image data
+      const imgData = canvas.toDataURL('image/png', 1.0);
+      
+      // Add image to PDF
+      pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalWidth, finalHeight);
+      
+      // Save PDF
+      pdf.save(`coupon-${generatedCoupon.couponCode}.pdf`);
+      
+      showToast('Coupon PDF downloaded successfully!', 'success');
+    } catch (error) {
+      console.error('Download coupon error:', error);
+      showToast('Failed to download coupon. Please try again.', 'error');
+    }
+  };
+
+  const handleGoToDashboard = () => {
+    router.push('/dashboard');
   };
 
   const formatCardNumber = (value: string) => {
@@ -324,6 +492,304 @@ export default function PaymentPage() {
         <div className="text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#10b981] border-r-transparent"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show coupon success screen
+  if (paymentSuccess && generatedCoupon) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-6 text-center">
+            <CheckCircle className="h-16 w-16 text-[#10b981] mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
+            <p className="text-gray-600">Your coupon has been generated successfully</p>
+          </div>
+
+          <Card className="p-8 mb-6">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Your Donation Coupon</h2>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Coupon Code</p>
+                  <p className="text-3xl font-bold font-mono text-[#10b981]">{generatedCoupon.couponCode}</p>
+                </div>
+                {partnerName && (
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Partner</p>
+                    <p className="text-xl font-semibold text-gray-900">{partnerName}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Amount</p>
+                  <p className="text-2xl font-bold text-gray-900">₹{generatedCoupon.amount}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Expiry Date</p>
+                  <p className="text-lg font-semibold text-gray-900">{new Date(generatedCoupon.expiryDate).toLocaleDateString()}</p>
+                </div>
+                <div className="pt-4">
+                  <Button
+                    onClick={handleDownloadCoupon}
+                    className="w-full bg-[#10b981] hover:bg-[#059669] text-white"
+                  >
+                    <Download className="h-5 w-5 mr-2" />
+                    Download Coupon
+                  </Button>
+                </div>
+              </div>
+              <div className="flex justify-center">
+                <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
+                  <Image
+                    src={generatedCoupon.qrCode}
+                    alt="QR Code"
+                    width={250}
+                    height={250}
+                    unoptimized
+                    className="rounded"
+                  />
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <div className="text-center">
+            <Button
+              onClick={handleGoToDashboard}
+              className="bg-[#10b981] hover:bg-[#059669] text-white"
+              size="lg"
+            >
+              Go to Dashboard
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Hidden coupon template for PDF generation */}
+          <div ref={couponRef} style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+            <div style={{
+              width: '800px',
+              minHeight: '600px',
+              backgroundColor: '#ffffff',
+              padding: '40px',
+              fontFamily: 'Arial, sans-serif',
+              boxSizing: 'border-box'
+            }}>
+              {/* Header */}
+              <div style={{
+                backgroundColor: '#10b981',
+                padding: '30px',
+                margin: '-40px -40px 30px -40px',
+                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '20px'
+              }}>
+                <img
+                  src="/Logo.png"
+                  alt="Care Foundation Logo"
+                  style={{
+                    height: '60px',
+                    width: 'auto',
+                    objectFit: 'contain'
+                  }}
+                />
+                <h1 style={{
+                  color: '#ffffff',
+                  fontSize: '32px',
+                  fontWeight: 'bold',
+                  margin: 0
+                }}>Donation Coupon</h1>
+              </div>
+
+              {/* Title */}
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: 'bold',
+                textAlign: 'center',
+                color: '#1f2937',
+                marginBottom: '40px'
+              }}>Your Donation Coupon</h2>
+
+              {/* Content Grid */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '40px',
+                alignItems: 'start'
+              }}>
+                {/* Left Column - Details */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                  {/* Coupon Code */}
+                  <div>
+                    <p style={{
+                      fontSize: '14px',
+                      color: '#6b7280',
+                      margin: '0 0 8px 0',
+                      fontWeight: 'normal'
+                    }}>Coupon Code</p>
+                    <p style={{
+                      fontSize: '28px',
+                      fontWeight: 'bold',
+                      color: '#10b981',
+                      margin: 0,
+                      fontFamily: 'monospace',
+                      letterSpacing: '2px'
+                    }}>{generatedCoupon.couponCode}</p>
+                  </div>
+
+                  {/* Partner Name */}
+                  {partnerName && (
+                    <div>
+                      <p style={{
+                        fontSize: '14px',
+                        color: '#6b7280',
+                        margin: '0 0 8px 0',
+                        fontWeight: 'normal'
+                      }}>Partner</p>
+                      <p style={{
+                        fontSize: '20px',
+                        fontWeight: 'bold',
+                        color: '#1f2937',
+                        margin: 0
+                      }}>{partnerName}</p>
+                    </div>
+                  )}
+
+                  {/* Amount */}
+                  <div>
+                    <p style={{
+                      fontSize: '14px',
+                      color: '#6b7280',
+                      margin: '0 0 8px 0',
+                      fontWeight: 'normal'
+                    }}>Amount</p>
+                    <p style={{
+                      fontSize: '28px',
+                      fontWeight: 'bold',
+                      color: '#1f2937',
+                      margin: 0
+                    }}>₹{generatedCoupon.amount}</p>
+                  </div>
+
+                  {/* Expiry Date */}
+                  <div>
+                    <p style={{
+                      fontSize: '14px',
+                      color: '#6b7280',
+                      margin: '0 0 8px 0',
+                      fontWeight: 'normal'
+                    }}>Expiry Date</p>
+                    <p style={{
+                      fontSize: '18px',
+                      fontWeight: 'bold',
+                      color: '#1f2937',
+                      margin: 0
+                    }}>{new Date(generatedCoupon.expiryDate).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}</p>
+                  </div>
+                </div>
+
+                {/* Right Column - QR Code */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <div style={{
+                    backgroundColor: '#ffffff',
+                    padding: '20px',
+                    borderRadius: '8px',
+                    border: '2px solid #e5e7eb',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center'
+                  }}>
+                    <img
+                      src={generatedCoupon.qrCode}
+                      alt="QR Code"
+                      style={{
+                        width: '250px',
+                        height: '250px',
+                        display: 'block'
+                      }}
+                    />
+                    <p style={{
+                      fontSize: '12px',
+                      color: '#6b7280',
+                      marginTop: '15px',
+                      textAlign: 'center'
+                    }}>Scan QR Code to Redeem</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div style={{
+                marginTop: '50px',
+                paddingTop: '30px',
+                borderTop: '1px solid #e5e7eb',
+                textAlign: 'center'
+              }}>
+                <p style={{
+                  fontSize: '14px',
+                  color: '#1f2937',
+                  margin: '8px 0',
+                  fontWeight: 'bold'
+                }}>Care Foundation Trust</p>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '30px',
+                  margin: '15px 0',
+                  flexWrap: 'wrap'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{
+                      fontSize: '12px',
+                      color: '#6b7280'
+                    }}>📞</span>
+                    <a href="tel:+919136521052" style={{
+                      fontSize: '12px',
+                      color: '#10b981',
+                      textDecoration: 'none'
+                    }}>+91 9136521052</a>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{
+                      fontSize: '12px',
+                      color: '#6b7280'
+                    }}>✉️</span>
+                    <a href="mailto:carefoundationtrustorg@gmail.com" style={{
+                      fontSize: '12px',
+                      color: '#10b981',
+                      textDecoration: 'none'
+                    }}>carefoundationtrustorg@gmail.com</a>
+                  </div>
+                </div>
+                <p style={{
+                  fontSize: '10px',
+                  color: '#9ca3af',
+                  margin: '10px 0 5px 0'
+                }}>Generated on {new Date().toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -381,66 +847,6 @@ export default function PaymentPage() {
                 <p className="text-sm text-gray-600 mb-1">Donation Amount</p>
                 <p className="text-2xl font-bold text-[#10b981]">₹{donationData?.amount || '0'}</p>
               </div>
-              
-              {/* Donor Information Form (if missing) */}
-              {(!donationData?.name || !donationData?.email) && (
-                <div className="mb-6 space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Your Information</h3>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Full Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={donorName}
-                      onChange={(e) => {
-                        setDonorName(e.target.value);
-                        if (donationData) {
-                          setDonationData({ ...donationData, name: e.target.value });
-                        }
-                      }}
-                      placeholder="Enter your name"
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10b981] focus:border-transparent"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      value={donorEmail}
-                      onChange={(e) => {
-                        setDonorEmail(e.target.value);
-                        if (donationData) {
-                          setDonationData({ ...donationData, email: e.target.value });
-                        }
-                      }}
-                      placeholder="your@email.com"
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10b981] focus:border-transparent"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={donorPhone}
-                      onChange={(e) => {
-                        setDonorPhone(e.target.value);
-                        if (donationData) {
-                          setDonationData({ ...donationData, phone: e.target.value });
-                        }
-                      }}
-                      placeholder="+91 9876543210"
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10b981] focus:border-transparent"
-                    />
-                  </div>
-                </div>
-              )}
               
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Choose Payment Option</h3>
               

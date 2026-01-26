@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Heart, TrendingUp, Users, Target, ArrowRight, CheckCircle, Star, User, Mail, Phone, Map, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, TrendingUp, Users, Target, ArrowRight, CheckCircle, Star, User, Mail, Phone, Map, ChevronLeft, ChevronRight, Ticket, X, QrCode, Copy } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { showToast } from '@/lib/toast';
+import { api, ApiError } from '@/lib/api';
 
 const Footer = dynamic(() => import('@/components/layout/Footer'), { ssr: false });
 const CampaignCard = dynamic(() => import('@/components/campaigns/CampaignCard'), { ssr: false });
@@ -68,11 +69,16 @@ export default function Home() {
     { icon: Target, value: '0', label: 'Total Campaigns', color: 'text-[#10b981]' },
     { icon: TrendingUp, value: '0%', label: 'Success Rate', color: 'text-[#10b981]' },
   ]);
-  const [urgentCampaigns, setUrgentCampaigns] = useState<any[]>([]);
   const [trendingCampaigns, setTrendingCampaigns] = useState<any[]>([]);
   const [healthPartners, setHealthPartners] = useState<any[]>([]);
   const [foodPartners, setFoodPartners] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCouponModal, setShowCouponModal] = useState(false);
+  const [generatedCoupon, setGeneratedCoupon] = useState<any>(null);
+  const [generatingCoupon, setGeneratingCoupon] = useState(false);
+  const [selectedFoodPartner, setSelectedFoodPartner] = useState<any>(null);
+  const [selectedHealthPartner, setSelectedHealthPartner] = useState<any>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchHomeData();
@@ -113,7 +119,17 @@ export default function Home() {
     try {
       setLoading(true);
       const { api } = await import('@/lib/api');
-      const data = await api.get('/dashboard/home');
+      const data = await api.get<{
+        stats?: {
+          totalRaised?: number;
+          totalDonors?: number;
+          totalCampaigns?: number;
+          successRate?: number;
+        };
+        trendingCampaigns?: any[];
+        healthPartners?: any[];
+        foodPartners?: any[];
+      }>('/dashboard/home');
       
       if (data && data.stats) {
         const formatCurrency = (amount: number) => {
@@ -128,20 +144,6 @@ export default function Home() {
           { icon: Target, value: `${(data.stats.totalCampaigns || 0).toLocaleString()}+`, label: 'Total Campaigns', color: 'text-[#10b981]' },
           { icon: TrendingUp, value: `${data.stats.successRate || 0}%`, label: 'Success Rate', color: 'text-[#10b981]' },
         ]);
-      }
-      
-      if (data.urgentCampaigns) {
-        setUrgentCampaigns(data.urgentCampaigns.map((campaign: any) => ({
-          id: campaign._id,
-          title: campaign.title,
-          image: campaign.image || 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&h=600&fit=crop&q=80',
-          category: campaign.category,
-          currentAmount: campaign.currentAmount || 0,
-          goalAmount: campaign.goalAmount || 0,
-          donors: campaign.donors || 0,
-          daysLeft: campaign.endDate ? Math.ceil((new Date(campaign.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0,
-          location: campaign.location || 'India',
-        })));
       }
       
       if (data.trendingCampaigns) {
@@ -240,6 +242,66 @@ export default function Home() {
   ];
   
   const [successStories, setSuccessStories] = useState<any[]>([]);
+  
+  const handleGetCoupon = async (partner: any, type: 'food' | 'health' = 'food') => {
+    try {
+      setGeneratingCoupon(true);
+      if (type === 'food') {
+        setSelectedFoodPartner(partner);
+      } else {
+        setSelectedHealthPartner(partner);
+      }
+      
+      // Check if user is logged in
+      const token = localStorage.getItem('userToken');
+      if (!token || token.trim() === '') {
+        showToast('Please login to get a coupon', 'info');
+        localStorage.setItem('redirectAfterLogin', '/');
+        router.push('/login');
+        return;
+      }
+
+      // Generate coupon for partner
+      const response = await api.post<any>('/coupons', {
+        amount: 0, // Free coupon for partner
+        paymentId: `${type}-partner-${partner._id || partner.id}-${Date.now()}`,
+        paymentStatus: 'completed',
+        beneficiaryName: partner.name || `${type === 'food' ? 'Food' : 'Health'} Partner`,
+        partnerId: partner._id || partner.id,
+      });
+
+      if (response.data) {
+        setGeneratedCoupon(response.data);
+        setShowCouponModal(true);
+        showToast('Coupon generated successfully!', 'success');
+      }
+    } catch (error) {
+      console.error('Error generating coupon:', error);
+      if (error instanceof ApiError) {
+        if (error.status === 401) {
+          showToast('Please login to get a coupon', 'error');
+          localStorage.setItem('redirectAfterLogin', '/');
+          router.push('/login');
+        } else {
+          showToast(`Failed to generate coupon: ${error.message}`, 'error');
+        }
+      } else {
+        showToast('Failed to generate coupon. Please try again.', 'error');
+      }
+    } finally {
+      setGeneratingCoupon(false);
+    }
+  };
+
+  const handleCopyCouponCode = () => {
+    if (generatedCoupon?.couponCode || generatedCoupon?.code) {
+      const code = generatedCoupon.couponCode || generatedCoupon.code;
+      navigator.clipboard.writeText(code);
+      setCopied(true);
+      showToast('Coupon code copied to clipboard!', 'success');
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
   
   // Slider items - only video
   const sliderItems = [
@@ -422,35 +484,6 @@ export default function Home() {
                 <div className="text-sm text-gray-600">{stat.label}</div>
               </Card>
             ))}
-          </div>
-        </div>
-      </section>
-      
-      {/* Urgent Campaigns */}
-      <section className="py-16 bg-[#ecfdf5]">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-10">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Urgent Campaigns</h2>
-              <p className="text-gray-600">Help these causes reach their goals</p>
-            </div>
-            <Link href="/campaigns">
-              <Button variant="ghost">
-                View All
-                <ArrowRight className="ml-2 h-4 w-4 inline" />
-              </Button>
-            </Link>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {urgentCampaigns.length > 0 ? (
-              urgentCampaigns.map((campaign) => (
-              <CampaignCard key={campaign.id} {...campaign} />
-              ))
-            ) : (
-              <div className="col-span-3 text-center py-8 text-gray-500">
-                No urgent campaigns at the moment
-              </div>
-            )}
           </div>
         </div>
       </section>
@@ -661,10 +694,13 @@ export default function Home() {
                               variant="outline" 
                               size="sm" 
                               className="w-full text-xs"
-                              onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(partner.address)}`, '_blank')}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/partners/health/${partner._id || partner.id}`);
+                              }}
                             >
                               <Map className="h-3 w-3 mr-1" />
-                              View Map
+                              Consult Now
                             </Button>
                             <button
                               className="w-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold text-xs py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all duration-200 shadow-md hover:shadow-lg"
@@ -799,10 +835,13 @@ export default function Home() {
                               variant="outline" 
                               size="sm" 
                               className="w-full text-xs"
-                              onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(partner.address)}`, '_blank')}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/partners/food/${partner._id || partner.id}`);
+                              }}
                             >
-                              <Map className="h-3 w-3 mr-1" />
-                              View Map
+                              <Ticket className="h-3 w-3 mr-1" />
+                              Get Coupon
                             </Button>
                             <button
                               className="w-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold text-xs py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all duration-200 shadow-md hover:shadow-lg"
@@ -855,6 +894,124 @@ export default function Home() {
           </div>
         </div>
       </section>
+      
+      {/* Coupon Modal */}
+      {showCouponModal && generatedCoupon && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 relative">
+            <button
+              onClick={() => {
+                setShowCouponModal(false);
+                setGeneratedCoupon(null);
+                setSelectedFoodPartner(null);
+              }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+
+            <div className="text-center mb-6">
+              <div className="bg-[#10b981] rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <CheckCircle className="h-8 w-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Coupon Generated!</h2>
+              <p className="text-gray-600">Your coupon is ready to use</p>
+            </div>
+
+            <Card className="p-6 mb-4">
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Coupon Code</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-2xl font-bold font-mono text-[#10b981] flex-1">
+                      {generatedCoupon.couponCode || generatedCoupon.code}
+                    </p>
+                    <button
+                      onClick={handleCopyCouponCode}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      title="Copy code"
+                    >
+                      {copied ? (
+                        <CheckCircle className="h-5 w-5 text-[#10b981]" />
+                      ) : (
+                        <Copy className="h-5 w-5 text-gray-600" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {(selectedFoodPartner || selectedHealthPartner) && (
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Partner</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {(selectedFoodPartner || selectedHealthPartner)?.name}
+                    </p>
+                  </div>
+                )}
+
+                {generatedCoupon.expiryDate && (
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Valid Until</p>
+                    <p className="text-base font-semibold text-gray-900">
+                      {new Date(generatedCoupon.expiryDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                )}
+
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="flex justify-center">
+                    {generatedCoupon.qrCode?.url || generatedCoupon.qrCode ? (
+                      <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
+                        <Image
+                          src={generatedCoupon.qrCode?.url || generatedCoupon.qrCode}
+                          alt="QR Code"
+                          width={200}
+                          height={200}
+                          className="rounded"
+                          unoptimized
+                        />
+                        <p className="text-xs text-gray-500 mt-2 text-center">Scan to redeem</p>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-100 p-8 rounded-lg">
+                        <QrCode className="h-16 w-16 text-gray-400 mx-auto" />
+                        <p className="text-xs text-gray-500 mt-2 text-center">QR Code not available</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => {
+                  setShowCouponModal(false);
+                  setGeneratedCoupon(null);
+                  setSelectedFoodPartner(null);
+                  setSelectedHealthPartner(null);
+                }}
+                variant="outline"
+                className="flex-1"
+              >
+                Close
+              </Button>
+              <Button
+                onClick={() => {
+                  router.push('/dashboard');
+                }}
+                className="flex-1 bg-[#10b981] hover:bg-[#059669] text-white"
+              >
+                View in Dashboard
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <Footer />
     </div>
