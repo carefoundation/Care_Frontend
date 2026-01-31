@@ -390,7 +390,7 @@ export default function Home() {
   return (
     <div className="bg-white">
       {/* Video/Image Slider Section - Directly below navbar */}
-      <div className="relative w-full h-[calc(100vh-6rem)] sm:h-[calc(100vh-7.5rem)] overflow-hidden mt-24 sm:mt-[7.5rem]">
+      <div className="relative w-full h-screen overflow-hidden">
         <VideoImageSlider
           items={sliderItems}
           imageSlideDuration={5}
@@ -561,7 +561,20 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {trustStats.map((stat, index) => (
               <Card key={index} hover className="p-6 text-center">
-                <stat.icon className={`h-10 w-10 mx-auto mb-4 ${stat.color}`} />
+                {stat.icon === Heart ? (
+                  <div className="h-16 w-16 mx-auto mb-4 flex items-center justify-center">
+                    <Image
+                      src="/Logo.png"
+                      alt="Care Foundation Logo"
+                      width={64}
+                      height={64}
+                      className="object-contain"
+                      unoptimized
+                    />
+                  </div>
+                ) : (
+                  <stat.icon className={`h-10 w-10 mx-auto mb-4 ${stat.color}`} />
+                )}
                 <div className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</div>
                 <div className="text-sm text-gray-600">{stat.label}</div>
               </Card>
@@ -614,7 +627,20 @@ export default function Home() {
                 <div className="bg-[#10b981] text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
                   {step.step}
                 </div>
-                <step.icon className="h-8 w-8 mx-auto mb-4 text-[#10b981]" />
+                {step.icon === Heart ? (
+                  <div className="h-12 w-12 mx-auto mb-4 flex items-center justify-center">
+                    <Image
+                      src="/Logo.png"
+                      alt="Care Foundation Logo"
+                      width={48}
+                      height={48}
+                      className="object-contain"
+                      unoptimized
+                    />
+                  </div>
+                ) : (
+                  <step.icon className="h-8 w-8 mx-auto mb-4 text-[#10b981]" />
+                )}
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">{step.title}</h3>
                 <p className="text-gray-600 text-sm">{step.description}</p>
               </Card>
@@ -763,29 +789,18 @@ export default function Home() {
                             </div>
                           )}
 
-                          {/* Impact */}
-                          <div className="mb-3 pt-3 border-t border-gray-200">
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="text-gray-600">Impact:</span>
-                              <span className="font-semibold text-gray-900">{partner.impact}</span>
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">Since {partner.since}</div>
-                          </div>
-
                           {/* Action Buttons */}
                           <div className="grid grid-cols-2 gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="w-full text-xs"
+                            <button
+                              className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-semibold text-xs py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all duration-200 shadow-md hover:shadow-lg"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 router.push(`/partners/health/${partner._id || partner.id}`);
                               }}
                             >
-                              <Ticket className="h-3 w-3 mr-1" />
+                              <Ticket className="h-3 w-3" />
                               Consult Now
-                            </Button>
+                            </button>
                             <button
                               className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-semibold text-xs py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all duration-200 shadow-md hover:shadow-lg"
                               onClick={(e) => {
@@ -907,29 +922,18 @@ export default function Home() {
                             </div>
                           )}
 
-                          {/* Impact */}
-                          <div className="mb-3 pt-3 border-t border-gray-200">
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="text-gray-600">Impact:</span>
-                              <span className="font-semibold text-gray-900">{partner.impact}</span>
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">Since {partner.since}</div>
-                          </div>
-
                           {/* Action Buttons */}
                           <div className="grid grid-cols-2 gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="w-full text-xs"
+                            <button
+                              className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-semibold text-xs py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all duration-200 shadow-md hover:shadow-lg"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 router.push(`/partners/food/${partner._id || partner.id}`);
                               }}
                             >
-                              <Ticket className="h-3 w-3 mr-1" />
+                              <Ticket className="h-3 w-3" />
                               Get Coupon
-                            </Button>
+                            </button>
                             <button
                               className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-semibold text-xs py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all duration-200 shadow-md hover:shadow-lg"
                               onClick={(e) => {
@@ -1050,27 +1054,17 @@ export default function Home() {
                               </div>
                             )}
 
-                            <div className="mb-3 pt-3 border-t border-gray-200">
-                              <div className="flex justify-between items-center text-xs">
-                                <span className="text-gray-600">Impact:</span>
-                                <span className="font-semibold text-gray-900">{partner.impact || 'Making a difference'}</span>
-                              </div>
-                              <div className="text-xs text-gray-500 mt-1">Since {partner.since || '2020'}</div>
-                            </div>
-
                             <div className="grid grid-cols-2 gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="w-full text-xs"
+                              <button
+                                className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-semibold text-xs py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all duration-200 shadow-md hover:shadow-lg"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   router.push(`/partners/hospital/${partner._id || partner.id}`);
                                 }}
                               >
-                                <Ticket className="h-3 w-3 mr-1" />
+                                <Ticket className="h-3 w-3" />
                                 Consult Now
-                              </Button>
+                              </button>
                               <button
                                 className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-semibold text-xs py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all duration-200 shadow-md hover:shadow-lg"
                                 onClick={(e) => {
@@ -1191,27 +1185,17 @@ export default function Home() {
                               </div>
                             )}
 
-                            <div className="mb-3 pt-3 border-t border-gray-200">
-                              <div className="flex justify-between items-center text-xs">
-                                <span className="text-gray-600">Impact:</span>
-                                <span className="font-semibold text-gray-900">{partner.impact || 'Making a difference'}</span>
-                              </div>
-                              <div className="text-xs text-gray-500 mt-1">Since {partner.since || '2020'}</div>
-                            </div>
-
                             <div className="grid grid-cols-2 gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="w-full text-xs"
+                              <button
+                                className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-semibold text-xs py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all duration-200 shadow-md hover:shadow-lg"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   router.push(`/partners/medicine/${partner._id || partner.id}`);
                                 }}
                               >
-                                <Ticket className="h-3 w-3 mr-1" />
+                                <Ticket className="h-3 w-3" />
                                 Consult Now
-                              </Button>
+                              </button>
                               <button
                                 className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-semibold text-xs py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all duration-200 shadow-md hover:shadow-lg"
                                 onClick={(e) => {
@@ -1332,27 +1316,17 @@ export default function Home() {
                               </div>
                             )}
 
-                            <div className="mb-3 pt-3 border-t border-gray-200">
-                              <div className="flex justify-between items-center text-xs">
-                                <span className="text-gray-600">Impact:</span>
-                                <span className="font-semibold text-gray-900">{partner.impact || 'Making a difference'}</span>
-                              </div>
-                              <div className="text-xs text-gray-500 mt-1">Since {partner.since || '2020'}</div>
-                            </div>
-
                             <div className="grid grid-cols-2 gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="w-full text-xs"
+                              <button
+                                className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-semibold text-xs py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all duration-200 shadow-md hover:shadow-lg"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   router.push(`/partners/pathology/${partner._id || partner.id}`);
                                 }}
                               >
-                                <Ticket className="h-3 w-3 mr-1" />
+                                <Ticket className="h-3 w-3" />
                                 Get Coupon
-                              </Button>
+                              </button>
                               <button
                                 className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-semibold text-xs py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all duration-200 shadow-md hover:shadow-lg"
                                 onClick={(e) => {

@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Heart, Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import Image from 'next/image';
+import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
 export default function ForgotPasswordPage() {
@@ -35,10 +36,16 @@ export default function ForgotPasswordPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
-            <div className="bg-[#10b981] p-2 rounded-lg">
-              <Heart className="h-6 w-6 text-white fill-white" />
+            <div className="p-2 rounded-lg">
+              <Image
+                src="/Logo.png"
+                alt="Care Foundation Logo"
+                width={80}
+                height={80}
+                className="object-contain"
+                unoptimized
+              />
             </div>
-            <span className="text-2xl font-bold text-gray-900">Care</span>
           </Link>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Forgot Password?</h1>
           <p className="text-gray-600">No worries! Enter your email and we'll send you reset instructions.</p>

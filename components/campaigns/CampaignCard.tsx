@@ -111,7 +111,7 @@ export default function CampaignCard({
         {/* Progress Bar Section */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-base font-semibold text-gray-900">₹{formatNumber(currentAmount)}</span>
+            <span className="text-base font-semibold tjext-gray-900">₹{formatNumber(currentAmount)}</span>
             <span className="text-sm text-gray-600">of ₹{formatNumber(goalAmount)}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden mb-1.5">

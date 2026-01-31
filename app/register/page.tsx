@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Heart, Mail, Lock, Eye, EyeOff, User, Phone, FileText, Upload, X, CheckCircle, Shield, Award, TrendingUp, Users, Target } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { showToast } from '@/lib/toast';
@@ -244,10 +245,16 @@ export default function RegisterPage() {
             <div className="sticky top-6 max-w-lg">
               {/* Logo */}
               <Link href="/" className="inline-flex items-center gap-2 mb-6">
-                <div className="bg-[#10b981] p-2 rounded-lg">
-                  <Heart className="h-6 w-6 text-white fill-white" />
+                <div className="p-2 rounded-lg">
+                  <Image
+                    src="/Logo.png"
+                    alt="Care Foundation Logo"
+                    width={80}
+                    height={80}
+                    className="object-contain"
+                    unoptimized
+                  />
                 </div>
-                <span className="text-2xl font-bold text-gray-900">Care Foundation</span>
               </Link>
 
               {step === 'role' ? (
@@ -268,9 +275,22 @@ export default function RegisterPage() {
                       { icon: Award, text: 'Get Recognition & Rewards' },
                     ].map((item, idx) => (
                       <div key={idx} className="flex items-center gap-3">
-                        <div className="bg-[#10b981] p-2 rounded-lg">
-                          <item.icon className="h-5 w-5 text-white" />
-                        </div>
+                        {item.icon === Heart ? (
+                          <div className="p-2 rounded-lg">
+                            <Image
+                              src="/Logo.png"
+                              alt="Care Foundation Logo"
+                              width={32}
+                              height={32}
+                              className="object-contain"
+                              unoptimized
+                            />
+                          </div>
+                        ) : (
+                          <div className="bg-[#10b981] p-2 rounded-lg">
+                            <item.icon className="h-5 w-5 text-white" />
+                          </div>
+                        )}
                         <span className="text-gray-700 font-medium">{item.text}</span>
                       </div>
                     ))}
@@ -354,10 +374,16 @@ export default function RegisterPage() {
             {/* Mobile Logo */}
             <div className="text-center mb-4 lg:hidden">
               <Link href="/" className="inline-flex items-center gap-2 mb-2">
-                <div className="bg-[#10b981] p-2 rounded-lg">
-                  <Heart className="h-5 w-5 text-white fill-white" />
+                <div className="p-2 rounded-lg">
+                  <Image
+                    src="/Logo.png"
+                    alt="Care Foundation Logo"
+                    width={72}
+                    height={72}
+                    className="object-contain"
+                    unoptimized
+                  />
                 </div>
-                <span className="text-xl font-bold text-gray-900">Care</span>
               </Link>
               <h1 className="text-2xl font-bold text-gray-900 mb-1">
                 {step === 'role' ? 'Choose Your Role' : 'Create Account'}

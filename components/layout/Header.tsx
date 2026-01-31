@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { Heart, Menu, X, User, LogIn, LogOut, ChevronDown, Info, Target, Users, Award, FileText, TrendingUp, PlusCircle, FolderOpen, UtensilsCrossed, Stethoscope, Handshake, UserPlus, Calendar, LayoutDashboard, Star, BookOpen, Building2, Pill, Microscope, Mail, Phone } from 'lucide-react';
+import { Heart, Menu, X, User, LogIn, LogOut, ChevronDown, Info, Target, Users, Award, FileText, TrendingUp, PlusCircle, FolderOpen, UtensilsCrossed, Stethoscope, Handshake, UserPlus, Calendar, LayoutDashboard, Star, BookOpen, Building2, Pill, Microscope, Mail, Phone, MapPin } from 'lucide-react';
 import AnimatedHamburger from '../ui/AnimatedHamburger';
 import Button from '../ui/Button';
 import { checkAdminSession, clearAdminSession } from '@/lib/auth';
@@ -177,12 +177,12 @@ export default function Header() {
   ];
 
   // Check if we're on admin pages or dashboard
-  const isAdminPage = pathname?.startsWith('/admin') || pathname?.startsWith('/dashboard');
-  const shouldHideTopBar = isAdmin || isAdminPage;
+  const isAdminPage = pathname?.startsWith('/admin');
+  const shouldHideTopBar = isAdmin && isAdminPage;
 
   return (
     <>
-      {/* Top Bar - Hidden for admin pages */}
+      {/* Top Bar */}
       {!shouldHideTopBar && (
       <div className="fixed top-0 left-0 right-0 z-[60] bg-[#10b981] text-white text-xs sm:text-sm">
         <div className="w-full px-4 sm:px-6 lg:px-8">
@@ -190,16 +190,24 @@ export default function Header() {
             {/* Left Side - Contact Info */}
             <div className="flex items-center gap-4 sm:gap-6">
               <a 
-                href="mailto:carefoundation.org@gmail.com" 
+                href="https://maps.app.goo.gl/iL1DFJAhvLWi875M6" 
+                target="_blank" 
+                rel="noopener noreferrer"
                 className="flex items-center gap-1.5 hover:text-gray-200 transition-colors"
               >
+                <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <span>Kharghar, Navi Mumbai-410210</span>
+              </a>
+              <a 
+                href="mailto:carefoundation.org@gmail.com" 
+                className="hidden sm:flex items-center gap-1.5 hover:text-gray-200 transition-colors"
+              >
                 <Mail className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                <span className="hidden sm:inline">carefoundation.org@gmail.com</span>
-                <span className="sm:hidden">carefoundation.org@gmail.com</span>
+                <span>carefoundation.org@gmail.com</span>
               </a>
               <a 
                 href="tel:+919136521052" 
-                className="flex items-center gap-1.5 hover:text-gray-200 transition-colors"
+                className="hidden sm:flex items-center gap-1.5 hover:text-gray-200 transition-colors"
               >
                 <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 <span>+91 9136521052</span>

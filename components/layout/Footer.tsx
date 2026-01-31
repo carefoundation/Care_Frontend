@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Heart, Facebook, Twitter, Instagram, Youtube, MapPin, Phone, Mail } from 'lucide-react';
+import Image from 'next/image';
+import { Facebook, Twitter, Instagram, Youtube, MapPin, Phone, Mail } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export default function Footer() {
@@ -26,8 +27,15 @@ export default function Footer() {
           {/* Brand Section */}
           <div>
             <Link href="/" className="flex items-start gap-3 mb-4 cursor-pointer hover:opacity-80 transition-opacity">
-              <div className="bg-[#10b981] p-3 rounded-lg">
-                <Heart className="h-8 w-8 text-white fill-white" />
+              <div className="p-3 rounded-lg">
+                <Image
+                  src="/Logo.png"
+                  alt="Care Foundation Logo"
+                  width={48}
+                  height={48}
+                  className="object-contain"
+                  unoptimized
+                />
               </div>
               <div>
                 <div className="text-gray-900 font-bold text-lg">Care Foundation Trust®</div>

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Handshake, ArrowRight, ChevronDown, Building2, CheckCircle, Mail, Phone, MapPin, Stethoscope, UtensilsCrossed, Pill, FlaskConical, Calendar, Heart, X, Upload, Loader2 } from 'lucide-react';
+import Image from 'next/image';
+import { Handshake, ArrowRight, ChevronDown, Building2, CheckCircle, Mail, Phone, MapPin, Stethoscope, UtensilsCrossed, Pill, FlaskConical, Calendar, Heart, X, Upload, Loader2, Target, Users, Award, TrendingUp } from 'lucide-react';
 import Footer from '@/components/layout/Footer';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -345,142 +346,100 @@ export default function BecomePartnerPage() {
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8">
-            {/* Partnership Form */}
+            {/* About Care Foundation */}
             <Card className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Partner For Dropdown */}
-              <div>
-                <label htmlFor="partnerFor" className="block text-sm font-medium text-gray-700 mb-2">
-                  Partner For
-                </label>
-                <div className="relative">
-                  <select
-                    id="partnerFor"
-                    name="partnerFor"
-                    value={formData.partnerFor}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10b981] focus:border-transparent appearance-none bg-white text-gray-900"
-                    suppressHydrationWarning
-                  >
-                    <option value="">Select partner type</option>
-                    <option value="food">Food Partner</option>
-                    <option value="health">Health Partner</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+              <div className="text-center mb-6">
+                <div className="flex justify-center mb-4">
+                  <Image
+                    src="/Logo.png"
+                    alt="Care Foundation Trust Logo"
+                    width={120}
+                    height={120}
+                    className="object-contain"
+                    unoptimized
+                  />
+                </div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Care Foundation Trust®</h2>
+                <p className="text-gray-600">Established Since 1997</p>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <Target className="h-5 w-5 text-[#10b981]" />
+                    Our Mission
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    Care Foundation Trust® is committed to addressing critical social issues and uplifting lives through 
+                    compassion, empathy, and collective action. We believe that every individual deserves dignity, respect, 
+                    and the opportunity to thrive.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <Users className="h-5 w-5 text-[#10b981]" />
+                    Our Impact
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed mb-3">
+                    Since 1997, we have been making a meaningful difference in the lives of those in need through:
+                  </p>
+                  <ul className="space-y-2 text-gray-700">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-5 w-5 text-[#10b981] flex-shrink-0 mt-0.5" />
+                      <span>Healthcare initiatives and medical support</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-5 w-5 text-[#10b981] flex-shrink-0 mt-0.5" />
+                      <span>Education programs and scholarships</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-5 w-5 text-[#10b981] flex-shrink-0 mt-0.5" />
+                      <span>Food distribution and hunger relief</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-5 w-5 text-[#10b981] flex-shrink-0 mt-0.5" />
+                      <span>Community development projects</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-5 w-5 text-[#10b981] flex-shrink-0 mt-0.5" />
+                      <span>Disaster relief and emergency support</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <Award className="h-5 w-5 text-[#10b981]" />
+                    Our Values
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-[#ecfdf5] p-3 rounded-lg">
+                      <p className="font-semibold text-gray-900 text-sm">Transparency</p>
+                    </div>
+                    <div className="bg-[#ecfdf5] p-3 rounded-lg">
+                      <p className="font-semibold text-gray-900 text-sm">Accountability</p>
+                    </div>
+                    <div className="bg-[#ecfdf5] p-3 rounded-lg">
+                      <p className="font-semibold text-gray-900 text-sm">Compassion</p>
+                    </div>
+                    <div className="bg-[#ecfdf5] p-3 rounded-lg">
+                      <p className="font-semibold text-gray-900 text-sm">Excellence</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-[#ecfdf5] to-white p-6 rounded-lg border border-[#10b981]/20">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-[#10b981]" />
+                    Registered Under Section 80G
+                  </h3>
+                  <p className="text-sm text-gray-700">
+                    Donations to Care Foundation Trust® are eligible for tax deduction under Section 80G of the Income Tax Act, 1961.
+                  </p>
                 </div>
               </div>
-
-              {/* Your Name */}
-              <div>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10b981] focus:border-transparent bg-white text-gray-900 placeholder-gray-400"
-                  placeholder="Your Name"
-                  suppressHydrationWarning
-                />
-              </div>
-
-              {/* Contact Number */}
-              <div>
-                <input
-                  type="tel"
-                  id="contactNumber"
-                  name="contactNumber"
-                  value={formData.contactNumber}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10b981] focus:border-transparent bg-white text-gray-900 placeholder-gray-400"
-                  placeholder="Contact Number"
-                  suppressHydrationWarning
-                />
-              </div>
-
-              {/* Email ID */}
-              <div>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10b981] focus:border-transparent bg-white text-gray-900 placeholder-gray-400"
-                  placeholder="Email ID"
-                  suppressHydrationWarning
-                />
-              </div>
-
-              {/* Address Of Operation */}
-              <div>
-                <textarea
-                  id="addressOfOperation"
-                  name="addressOfOperation"
-                  value={formData.addressOfOperation}
-                  onChange={handleChange}
-                  required
-                  rows={4}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10b981] focus:border-transparent bg-white text-gray-900 placeholder-gray-400 resize-none"
-                  placeholder="Address Of Operation"
-                  suppressHydrationWarning
-                />
-              </div>
-
-              {/* Your Message */}
-              <div>
-                <textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  rows={4}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10b981] focus:border-transparent bg-white text-gray-900 placeholder-gray-400 resize-none"
-                  placeholder="Your Message"
-                  suppressHydrationWarning
-                />
-              </div>
-
-              {/* Request Now Button */}
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                  {error}
-                </div>
-              )}
-              {success && (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
-                  Thank you for your interest in becoming a partner! We will contact you within 48 hours.
-                </div>
-              )}
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isSubmitting || !isLoggedIn}
-                onClick={!isLoggedIn ? (e) => {
-                  e.preventDefault();
-                  showToast('Please login to submit partner application', 'error');
-                  router.push('/login');
-                } : undefined}
-              >
-                {isSubmitting ? 'Submitting...' : !isLoggedIn ? (
-                  <>
-                    Login Required
-                    <ArrowRight className="ml-2 h-5 w-5 inline" />
-                  </>
-                ) : (
-                  <>
-                    Request Now
-                    <ArrowRight className="ml-2 h-5 w-5 inline" />
-                  </>
-                )}
-              </Button>
-            </form>
-          </Card>
+            </Card>
 
             {/* Benefits & Info */}
             <div className="space-y-6">
